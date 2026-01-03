@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:globe_trotter/screens/admin_page.dart';
 import 'package:globe_trotter/screens/login_screen.dart';
-import 'package:globe_trotter/screens/main_page.dart';
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
