@@ -267,12 +267,15 @@ class _MainPageState extends State<MainPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => UserProfilePage(),
+                        builder: (context) => ProfileSettingsPageWeb(
+                          themeColor: Color(0xFF6d4c7d),
+                          accentColor: Color(0xFF9d7fa8),
+                        ),
                       ),
                     );
-                  },
-                  child: CircleAvatar(
-                    radius: 16,
+                    },
+                    child: CircleAvatar(
+                      radius: 16,
                     backgroundColor: primaryPurple,
                     child: const Text(
                       'RD',
