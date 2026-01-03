@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:globe_trotter/screens/main_page.dart';
+import 'package:globe_trotter/screens/login_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MainPage(),
+      home: const LoginScreen(),
     );
   }
 }
