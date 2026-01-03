@@ -273,9 +273,9 @@ class _MainPageState extends State<MainPage> {
                         ),
                       ),
                     );
-                    },
-                    child: CircleAvatar(
-                      radius: 16,
+                  },
+                  child: CircleAvatar(
+                    radius: 16,
                     backgroundColor: primaryPurple,
                     child: const Text(
                       'RD',

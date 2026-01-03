@@ -1,11 +1,26 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:validators/validators.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+// Mock data constants
+class MockProfileData {
+  static const String name = 'Alexander Thompson';
+  static const String email = 'alex.thompson@globetrotter.com';
+  static const String phone = '+1 (555) 123-4567';
+  static const String favoriteDestination = 'Santorini, Greece';
+  static const String travelPreference = 'Beach & Adventure';
+  static const String passportNumber = 'US87654321';
+  static const List<String> mockDestinations = [
+    'Paris',
+    'Tokyo',
+    'Bali',
+    'New York',
+    'Dubai',
+  ];
+}
 
 class ProfileSettingsPageWeb extends StatefulWidget {
   final Color themeColor;
@@ -21,9 +36,10 @@ class ProfileSettingsPageWeb extends StatefulWidget {
   _ProfileSettingsPageWebState createState() => _ProfileSettingsPageWebState();
 }
 
-class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
+class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
+    with SingleTickerProviderStateMixin {
   bool isLocationOn = true;
-  File? _profileImage;
+  String? _profileImagePath;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -36,6 +52,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
       TextEditingController();
   String _selectedLanguage = 'English';
   List<String> savedDestinations = [];
+  late AnimationController _animationController;
 
   // Sample trip data
   final List<Map<String, String>> preplanningTrips = [
@@ -54,27 +71,43 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
     _loadProfileData();
+    _loadProfileImage();
+  }
+
+  Future<void> _loadProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final imagePath = prefs.getString('profileImagePath');
+    if (imagePath != null) {
+      setState(() {
+        _profileImagePath = imagePath;
+      });
+    }
   }
 
   Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      nameController.text = prefs.getString('name') ?? 'Alex Johnson';
-      emailController.text =
-          prefs.getString('email') ?? 'alex.johnson@email.com';
-      phoneController.text = prefs.getString('phone') ?? '+1 (555) 123-4567';
+      nameController.text = prefs.getString('name') ?? MockProfileData.name;
+      emailController.text = prefs.getString('email') ?? MockProfileData.email;
+      phoneController.text = prefs.getString('phone') ?? MockProfileData.phone;
       favoriteDestinationController.text =
-          prefs.getString('favoriteDestination') ?? 'Paris, France';
+          prefs.getString('favoriteDestination') ??
+          MockProfileData.favoriteDestination;
       travelPreferenceController.text =
-          prefs.getString('travelPreference') ?? 'Adventure & Culture';
+          prefs.getString('travelPreference') ??
+          MockProfileData.travelPreference;
       passportNumberController.text =
-          prefs.getString('passportNumber') ?? 'US12345678';
+          prefs.getString('passportNumber') ?? MockProfileData.passportNumber;
       _selectedLanguage = prefs.getString('language') ?? 'English';
       isLocationOn = prefs.getBool('location') ?? true;
       savedDestinations =
           prefs.getStringList('savedDestinations') ??
-          ['Paris', 'Tokyo', 'Bali'];
+          List<String>.from(MockProfileData.mockDestinations);
     });
   }
 
@@ -92,6 +125,9 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
     await prefs.setString('language', _selectedLanguage);
     await prefs.setBool('location', isLocationOn);
     await prefs.setStringList('savedDestinations', savedDestinations);
+    if (_profileImagePath != null) {
+      await prefs.setString('profileImagePath', _profileImagePath!);
+    }
   }
 
   Future<void> _deleteAccount() async {
@@ -139,13 +175,218 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-    setState(() {
-      if (image != null) {
-        _profileImage = File(image.path);
-      }
-    });
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 8,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 350),
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: widget.accentColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.add_photo_alternate_rounded,
+                    size: 40,
+                    color: widget.accentColor,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Upload Photo',
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Choose your profile picture',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildImageSourceButton(
+                        icon: Icons.camera_alt_rounded,
+                        label: 'Camera',
+                        onTap: () async {
+                          Navigator.pop(dialogContext);
+                          try {
+                            final XFile? image = await picker.pickImage(
+                              source: ImageSource.camera,
+                              imageQuality: 80,
+                            );
+                            if (image != null && mounted) {
+                              setState(() {
+                                _profileImagePath = image.path;
+                              });
+                              await _saveProfileData();
+                              _showSuccessSnackbar(
+                                'Photo updated successfully!',
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              _showErrorSnackbar('Failed to take photo');
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildImageSourceButton(
+                        icon: Icons.photo_library_rounded,
+                        label: 'Gallery',
+                        onTap: () async {
+                          Navigator.pop(dialogContext);
+                          try {
+                            final XFile? image = await picker.pickImage(
+                              source: ImageSource.gallery,
+                              imageQuality: 80,
+                            );
+                            if (image != null && mounted) {
+                              setState(() {
+                                _profileImagePath = image.path;
+                              });
+                              await _saveProfileData();
+                              _showSuccessSnackbar(
+                                'Photo updated successfully!',
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              _showErrorSnackbar('Failed to select photo');
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 24,
+                    ),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.inter(
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildImageSourceButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: widget.accentColor.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: widget.accentColor.withOpacity(0.2),
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 36, color: widget.accentColor),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: widget.accentColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSuccessSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 12),
+            Text(
+              message,
+              style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Text(
+              message,
+              style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   void _editField(
@@ -305,49 +546,48 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.person_outline, color: Colors.white, size: 24),
+              child: Icon(Icons.person_outline, color: Colors.white, size: 26),
             ),
-            const SizedBox(width: 12),
-            Text(
-              'Professional Profile',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-                fontSize: 22,
-                letterSpacing: 0.5,
-              ),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'My Profile',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    fontSize: 24,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                Text(
+                  'Manage your travel profile',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
         backgroundColor: widget.themeColor,
         centerTitle: false,
         elevation: 0,
-        toolbarHeight: 70,
+        toolbarHeight: 80,
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Hero Section with Gradient
-            Container(
-              height: 120,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    widget.themeColor,
-                    widget.themeColor.withOpacity(0.0),
-                  ],
-                ),
-              ),
-            ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
+              padding: const EdgeInsets.fromLTRB(40, 40, 40, 40),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -355,21 +595,33 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(flex: 2, child: _buildEnhancedProfileCard()),
-                      const SizedBox(width: 24),
-                      Expanded(flex: 3, child: _buildPersonalInformation()),
+                      Expanded(
+                        flex: 1,
+                        child: SizedBox(
+                          height: 620,
+                          child: _buildEnhancedProfileCard(),
+                        ),
+                      ),
+                      const SizedBox(width: 28),
+                      Expanded(
+                        flex: 1,
+                        child: SizedBox(
+                          height: 620,
+                          child: _buildPersonalInformation(),
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 48),
                   // Statistics Cards
                   _buildStatisticsSection(),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 56),
                   // Preplanned Trips Section
                   _buildPreplannedTripsSection(),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 56),
                   // Previous Trips Section
                   _buildPreviousTripsSection(),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 56),
                   // Settings Section
                   _buildSettingsSection(),
                 ],
@@ -383,15 +635,19 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
 
   Widget _buildEnhancedProfileCard() {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(36),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.white, widget.accentColor.withOpacity(0.02)],
+        ),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+            color: widget.accentColor.withOpacity(0.08),
+            blurRadius: 30,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -401,67 +657,72 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
           Stack(
             children: [
               Container(
-                width: 140,
-                height: 140,
+                width: 160,
+                height: 160,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      widget.accentColor.withOpacity(0.3),
-                      widget.accentColor.withOpacity(0.1),
+                      widget.accentColor.withOpacity(0.2),
+                      widget.accentColor.withOpacity(0.05),
                     ],
                   ),
                   boxShadow: [
                     BoxShadow(
                       color: widget.accentColor.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
                     ),
                   ],
                 ),
                 child: Container(
-                  margin: const EdgeInsets.all(4),
+                  margin: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 4),
+                    border: Border.all(color: Colors.white, width: 5),
                     color: Colors.white,
                   ),
                   child: CircleAvatar(
-                    backgroundColor: const Color(0xFFF5F3FF),
-                    backgroundImage: _profileImage != null
-                        ? FileImage(_profileImage!)
+                    backgroundColor: widget.accentColor.withOpacity(0.1),
+                    backgroundImage: _profileImagePath != null
+                        ? NetworkImage(_profileImagePath!)
                         : null,
-                    child: _profileImage == null
+                    child: _profileImagePath == null
                         ? Icon(
                             Icons.person,
-                            size: 70,
-                            color: widget.accentColor.withOpacity(0.6),
+                            size: 80,
+                            color: widget.accentColor.withOpacity(0.5),
                           )
                         : null,
                   ),
                 ),
               ),
               Positioned(
-                bottom: 5,
-                right: 5,
+                bottom: 8,
+                right: 8,
                 child: GestureDetector(
                   onTap: _pickImage,
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: widget.accentColor,
+                      gradient: LinearGradient(
+                        colors: [
+                          widget.accentColor,
+                          widget.accentColor.withOpacity(0.8),
+                        ],
+                      ),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: widget.accentColor.withOpacity(0.4),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          color: widget.accentColor.withOpacity(0.5),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
                     child: const Icon(
                       Icons.camera_alt_rounded,
-                      size: 18,
+                      size: 20,
                       color: Colors.white,
                     ),
                   ),
@@ -469,52 +730,62 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           Text(
             nameController.text,
             style: GoogleFonts.poppins(
-              fontSize: 24,
+              fontSize: 26,
               fontWeight: FontWeight.w700,
               color: const Color(0xFF1A1A1A),
               letterSpacing: 0.3,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: widget.accentColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                colors: [
+                  widget.accentColor.withOpacity(0.15),
+                  widget.accentColor.withOpacity(0.08),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.email_outlined, size: 14, color: widget.accentColor),
-                const SizedBox(width: 6),
+                Icon(Icons.email_outlined, size: 16, color: widget.accentColor),
+                const SizedBox(width: 8),
                 Text(
                   emailController.text,
                   style: GoogleFonts.inter(
-                    fontSize: 13,
+                    fontSize: 14,
                     color: widget.accentColor,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 36),
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
                 colors: [
-                  widget.accentColor.withOpacity(0.05),
-                  widget.accentColor.withOpacity(0.02),
+                  widget.accentColor.withOpacity(0.08),
+                  widget.accentColor.withOpacity(0.03),
                 ],
               ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: widget.accentColor.withOpacity(0.1)),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: widget.accentColor.withOpacity(0.15),
+                width: 1.5,
+              ),
             ),
             child: Column(
               children: [
@@ -524,9 +795,9 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
                   value: '12',
                   color: const Color(0xFF4CAF50),
                 ),
-                const SizedBox(height: 20),
-                Divider(color: Colors.grey.shade200, thickness: 1),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
+                Divider(color: Colors.grey.shade200, thickness: 1.5),
+                const SizedBox(height: 24),
                 _buildStatItem(
                   icon: Icons.public_rounded,
                   label: 'Countries Visited',
@@ -691,141 +962,98 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
 
   Widget _buildPersonalInformation() {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(36),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 30,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: widget.accentColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: widget.accentColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.person_outline_rounded,
+                    color: widget.accentColor,
+                    size: 24,
+                  ),
                 ),
-                child: Icon(
-                  Icons.person_outline_rounded,
-                  color: widget.accentColor,
-                  size: 24,
+                const SizedBox(width: 12),
+                Text(
+                  'Personal Information',
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1A1A1A),
+                    letterSpacing: 0.3,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Personal Information',
-                style: GoogleFonts.poppins(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1A1A1A),
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          _buildEditableField(
-            label: 'FULL NAME',
-            value: nameController.text,
-            controller: nameController,
-            hint: 'Enter your full name',
-            keyboardType: TextInputType.name,
-            icon: Icons.person_outline,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your name';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 24),
-          _buildEditableField(
-            label: 'EMAIL ADDRESS',
-            value: emailController.text,
-            controller: emailController,
-            hint: 'Enter your email',
-            keyboardType: TextInputType.emailAddress,
-            icon: Icons.email_outlined,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!isEmail(value)) {
-                return 'Please enter a valid email';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 24),
-          _buildEditableField(
-            label: 'PHONE NUMBER',
-            value: phoneController.text,
-            controller: phoneController,
-            hint: 'Enter your phone number',
-            keyboardType: TextInputType.phone,
-            icon: Icons.phone_outlined,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your phone number';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 24),
-          _buildEditableField(
-            label: 'FAVORITE DESTINATION',
-            value: favoriteDestinationController.text,
-            controller: favoriteDestinationController,
-            hint: 'Enter your favorite destination',
-            keyboardType: TextInputType.text,
-            icon: Icons.place_outlined,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your favorite destination';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 24),
-          _buildEditableField(
-            label: 'TRAVEL PREFERENCE',
-            value: travelPreferenceController.text,
-            controller: travelPreferenceController,
-            hint: 'e.g., Adventure, Beach, Culture, Food',
-            keyboardType: TextInputType.text,
-            icon: Icons.explore_outlined,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your travel preference';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 24),
-          _buildEditableField(
-            label: 'PASSPORT NUMBER',
-            value: passportNumberController.text,
-            controller: passportNumberController,
-            hint: 'Enter your passport number',
-            keyboardType: TextInputType.text,
-            icon: Icons.badge_outlined,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your passport number';
-              }
-              return null;
-            },
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: 32),
+            _buildEditableField(
+              label: 'FULL NAME',
+              value: nameController.text,
+              controller: nameController,
+              hint: 'Enter your full name',
+              keyboardType: TextInputType.name,
+              icon: Icons.person_outline,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your name';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 24),
+            _buildEditableField(
+              label: 'EMAIL ADDRESS',
+              value: emailController.text,
+              controller: emailController,
+              hint: 'Enter your email',
+              keyboardType: TextInputType.emailAddress,
+              icon: Icons.email_outlined,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your email';
+                }
+                if (!isEmail(value)) {
+                  return 'Please enter a valid email';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 24),
+            _buildEditableField(
+              label: 'PHONE NUMBER',
+              value: phoneController.text,
+              controller: phoneController,
+              hint: 'Enter your phone number',
+              keyboardType: TextInputType.phone,
+              icon: Icons.phone_outlined,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your phone number';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -963,7 +1191,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
               (index) => Padding(
                 padding: const EdgeInsets.only(right: 20),
                 child: _buildEnhancedTripCard(
-                  preplanningTrips[index]['name'] ?? '',
+                  preplanningTrips[index]['name'] ?? 'Yuva',
                   true,
                 ),
               ),
@@ -1120,15 +1348,15 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
 
   Widget _buildSettingsSection() {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(36),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 30,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -1138,22 +1366,27 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: widget.accentColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  gradient: LinearGradient(
+                    colors: [
+                      widget.accentColor.withOpacity(0.15),
+                      widget.accentColor.withOpacity(0.08),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   Icons.settings_outlined,
                   color: widget.accentColor,
-                  size: 24,
+                  size: 28,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Text(
                 'Settings & Preferences',
                 style: GoogleFonts.poppins(
-                  fontSize: 22,
+                  fontSize: 24,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF1A1A1A),
                   letterSpacing: 0.3,
@@ -1161,59 +1394,79 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
               ),
             ],
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 36),
           // Language Preference
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFFFAFAFA),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
+              gradient: LinearGradient(
+                colors: [const Color(0xFFFAFAFA), Colors.white],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200, width: 1.5),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.language_rounded,
-                      size: 18,
-                      color: widget.accentColor,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: widget.accentColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.language_rounded,
+                        size: 20,
+                        color: widget.accentColor,
+                      ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     Text(
                       'LANGUAGE PREFERENCE',
                       style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
                         color: Colors.grey.shade600,
-                        letterSpacing: 0.8,
+                        letterSpacing: 1,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 4,
+                    horizontal: 18,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: widget.accentColor.withOpacity(0.3),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.accentColor.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: DropdownButton<String>(
                     value: _selectedLanguage,
                     isExpanded: true,
                     underline: Container(),
                     icon: Icon(
-                      Icons.keyboard_arrow_down,
+                      Icons.keyboard_arrow_down_rounded,
                       color: widget.accentColor,
+                      size: 28,
                     ),
                     style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                       color: const Color(0xFF1A1A1A),
                     ),
                     items:
@@ -1223,18 +1476,33 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
                           'French',
                           'German',
                           'Japanese',
+                          'Chinese',
+                          'Italian',
                         ].map((lang) {
                           return DropdownMenuItem(
                             value: lang,
-                            child: Text(lang),
+                            child: Row(
+                              children: [
+                                Text(lang),
+                                if (lang == _selectedLanguage) ...[
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    Icons.check_circle,
+                                    size: 18,
+                                    color: widget.accentColor,
+                                  ),
+                                ],
+                              ],
+                            ),
                           );
                         }).toList(),
-                    onChanged: (newValue) {
+                    onChanged: (newValue) async {
                       if (newValue != null) {
                         setState(() {
                           _selectedLanguage = newValue;
                         });
-                        _saveProfileData();
+                        await _saveProfileData();
+                        _showSuccessSnackbar('Language changed to $newValue');
                       }
                     },
                   ),
@@ -1591,6 +1859,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb> {
 
   @override
   void dispose() {
+    _animationController.dispose();
     nameController.dispose();
     emailController.dispose();
     phoneController.dispose();
