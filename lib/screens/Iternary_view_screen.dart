@@ -3,11 +3,13 @@ import 'dart:math' as math;
 
 class Activity {
   final String name;
+  final String? description; // Add description field
   final double expense;
   bool isCompleted;
 
   Activity({
     required this.name,
+    this.description, // Add to constructor
     required this.expense,
     this.isCompleted = false,
   });
@@ -585,6 +587,22 @@ class _ItineraryViewScreenState extends State<ItineraryViewScreen>
                         decorationColor: Colors.grey[500],
                       ),
                     ),
+                    if (activity.description != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        activity.description!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: activity.isCompleted
+                              ? Colors.grey[400]
+                              : Colors.grey[600],
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
