@@ -14,6 +14,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
+  OverlayEntry? _overlayEntry;
+  AnimationController? _popupAnimationController;
+
   @override
   void initState() {
     super.initState();
@@ -43,6 +46,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   void dispose() {
     _emailController.dispose();
     _animationController.dispose();
+    _removePopup();
     super.dispose();
   }
 
@@ -50,11 +54,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     final email = _emailController.text.trim();
 
     if (email.isEmpty) {
-      _showSnackBar('Please enter your email address', isError: true);
+      _showRightPopup('Please enter your email address', isError: true);
     } else if (!_isValidEmail(email)) {
-      _showSnackBar('Please enter a valid email address', isError: true);
+      _showRightPopup('Please enter a valid email address', isError: true);
     } else {
-      _showSnackBar('Password reset link sent to $email', isError: false);
+      _showRightPopup('Reset link sent!', isError: false);
       // Add your password reset logic here
     }
   }
@@ -63,18 +67,40 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
   }
 
-  void _showSnackBar(String message, {required bool isError}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError
-            ? const Color(0xFFd32f2f)
-            : const Color(0xFF6d4c7d),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(20),
+  void _showRightPopup(String message, {required bool isError}) {
+    _removePopup();
+
+    _popupAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => _RightFadePopup(
+        message: message,
+        isError: isError,
+        animationController: _popupAnimationController!,
+        onDismiss: _removePopup,
       ),
     );
+
+    Overlay.of(context).insert(_overlayEntry!);
+    _popupAnimationController!.forward();
+
+    Future.delayed(const Duration(seconds: 3), () {
+      _removePopup();
+    });
+  }
+
+  void _removePopup() {
+    if (_popupAnimationController != null) {
+      _popupAnimationController!.reverse().then((_) {
+        _overlayEntry?.remove();
+        _overlayEntry = null;
+        _popupAnimationController?.dispose();
+        _popupAnimationController = null;
+      });
+    }
   }
 
   @override
@@ -353,6 +379,108 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,
           vertical: 18,
+        ),
+      ),
+    );
+  }
+}
+
+class _RightFadePopup extends StatelessWidget {
+  final String message;
+  final bool isError;
+  final AnimationController animationController;
+  final VoidCallback onDismiss;
+
+  const _RightFadePopup({
+    required this.message,
+    required this.isError,
+    required this.animationController,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final slideAnimation =
+        Tween<Offset>(begin: const Offset(1.2, 0), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
+    final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: animationController, curve: Curves.easeInOut),
+    );
+
+    return Positioned(
+      top: 24,
+      right: 16,
+      child: SlideTransition(
+        position: slideAnimation,
+        child: FadeTransition(
+          opacity: fadeAnimation,
+          child: SafeArea(
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 280),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: isError
+                      ? const Color(0xFFd32f2f)
+                      : const Color(0xFF6d4c7d),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          (isError
+                                  ? const Color(0xFFd32f2f)
+                                  : const Color(0xFF6d4c7d))
+                              .withOpacity(0.3),
+                      blurRadius: 16,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isError
+                          ? Icons.error_outline
+                          : Icons.check_circle_outline,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Text(
+                        message,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: onDismiss,
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
