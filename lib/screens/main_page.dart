@@ -3,6 +3,7 @@ import 'package:globe_trotter/components/create_dialog.dart';
 import 'package:globe_trotter/screens/Iternary_view_screen.dart';
 import 'package:globe_trotter/screens/destination_detail_screen.dart';
 import 'package:globe_trotter/screens/calendar_view.dart';
+import 'package:globe_trotter/screens/community_page.dart';
 import 'package:globe_trotter/screens/profile_screen.dart';
 
 class MainPage extends StatefulWidget {
@@ -123,6 +124,19 @@ class _MainPageState extends State<MainPage> {
           ],
         ),
         floatingActionButton: _buildFAB(),
+      );
+    }
+
+    // Show Community Page when Community (index 2) is selected
+    if (_selectedIndex == 2) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F7FA),
+        body: Row(
+          children: [
+            if (isWideScreen) _buildSideNav(),
+            const Expanded(child: CommunityPage()),
+          ],
+        ),
       );
     }
 
