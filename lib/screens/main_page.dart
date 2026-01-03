@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:globe_trotter/components/create_alert.dart';
+import 'package:globe_trotter/components/create_dialog.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});

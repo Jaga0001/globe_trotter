@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CreateTripResult {
   final String tripName;
   final String place;
+  final int? members;
   final DateTime? startDate;
   final DateTime? endDate;
 
   const CreateTripResult({
     required this.tripName,
     required this.place,
+    required this.members,
     required this.startDate,
     required this.endDate,
   });
@@ -44,6 +47,7 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
 
   final TextEditingController _tripNameController = TextEditingController();
   final TextEditingController _placeController = TextEditingController();
+  final TextEditingController _membersController = TextEditingController();
   final TextEditingController _startDateController = TextEditingController();
   final TextEditingController _endDateController = TextEditingController();
 
@@ -54,9 +58,16 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
   void dispose() {
     _tripNameController.dispose();
     _placeController.dispose();
+    _membersController.dispose();
     _startDateController.dispose();
     _endDateController.dispose();
     super.dispose();
+  }
+
+  int? _parseMembers() {
+    final raw = _membersController.text.trim();
+    if (raw.isEmpty) return null;
+    return int.tryParse(raw);
   }
 
   String _formatDate(DateTime date) {
@@ -103,6 +114,7 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
       CreateTripResult(
         tripName: _tripNameController.text.trim(),
         place: _placeController.text.trim(),
+        members: _parseMembers(),
         startDate: _startDate,
         endDate: _endDate,
       ),
@@ -243,13 +255,19 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
           _labeledField(
             label: 'Trip Name :',
             controller: _tripNameController,
-            hintText: 'My Trip',
+            hintText: 'Enter your Trip name',
           ),
           const SizedBox(height: 10),
           _labeledField(
             label: 'Select a Place :',
             controller: _placeController,
-            hintText: 'Goa, India',
+            hintText: 'where are you heading?',
+          ),
+          const SizedBox(height: 10),
+          _labeledNumberField(
+            label: 'No. of Members :',
+            controller: _membersController,
+            hintText: 'eg : 2',
           ),
           const SizedBox(height: 10),
           _labeledDateField(
@@ -265,6 +283,38 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _labeledNumberField({
+    required String label,
+    required TextEditingController controller,
+    required String hintText,
+  }) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 140,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: _textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Expanded(
+          child: _textField(
+            controller: controller,
+            hintText: hintText,
+            readOnly: false,
+            onTap: null,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          ),
+        ),
+      ],
     );
   }
 
@@ -335,11 +385,15 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
     required bool readOnly,
     required VoidCallback? onTap,
     IconData? suffixIcon,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextField(
       controller: controller,
       readOnly: readOnly,
       onTap: onTap,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       style: const TextStyle(color: _textPrimary, fontSize: 13),
       decoration: InputDecoration(
         isDense: true,
