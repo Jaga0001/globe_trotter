@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:globe_trotter/components/create_dialog.dart';
+import 'package:globe_trotter/screens/Iternary_view_screen.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -584,13 +585,7 @@ class _MainPageState extends State<MainPage> {
               ),
               child: Stack(
                 children: [
-                  Center(
-                    child: Image.network(
-                      cover,
-                      
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                  Center(child: Image.network(cover, fit: BoxFit.cover)),
                   Positioned(
                     top: 12,
                     right: 12,
@@ -866,13 +861,51 @@ class _MainPageState extends State<MainPage> {
       itemCount: trips.length,
       itemBuilder: (context, index) {
         final trip = trips[index];
-        return _buildTripCard(
-          trip['name']!,
-          trip['date']!,
-          trip['days']!,
-          trip['status']!,
+        return GestureDetector(
+          onTap: () => _navigateToItinerary(trip),
+          child: _buildTripCard(
+            trip['name']!,
+            trip['date']!,
+            trip['days']!,
+            trip['status']!,
+          ),
         );
       },
+    );
+  }
+
+  void _navigateToItinerary(Map<String, String> trip) {
+    // Create sample itinerary data
+    final tripDetails = TripDetails(
+      tripName: trip['name']!,
+      date: trip['date']!,
+      days: trip['days']!,
+      status: trip['status']!,
+      itinerary: [
+        DayItinerary(
+          dayNumber: 1,
+          activities: [
+            Activity(name: 'Morning Temple Visit', expense: 500),
+            Activity(name: 'City Tour', expense: 1200),
+            Activity(name: 'Local Market Shopping', expense: 2000),
+          ],
+        ),
+        DayItinerary(
+          dayNumber: 2,
+          activities: [
+            Activity(name: 'Fort Exploration', expense: 800),
+            Activity(name: 'Traditional Lunch', expense: 600),
+            Activity(name: 'Evening Cultural Show', expense: 1500),
+          ],
+        ),
+      ],
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ItineraryViewScreen(tripDetails: tripDetails),
+      ),
     );
   }
 
