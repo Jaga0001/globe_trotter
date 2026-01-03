@@ -1,4 +1,28 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
+
+/// Theme constants for the destination detail screen
+abstract class DestinationTheme {
+  static const Color primaryColor = Color(0xFF6C5CE7);
+  static const Color accentColor = Color(0xFF0984E3);
+  static const Color darkColor = Color(0xFF2D3436);
+  static const Color lightBg = Color(0xFFF8F9FA);
+  static const Color cardBg = Color(0xFFFFFFFF);
+  static const Color gradientStart = Color(0xFF6C5CE7);
+  static const Color gradientEnd = Color(0xFF0984E3);
+
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [gradientStart, gradientEnd],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient ratingGradient = LinearGradient(
+    colors: [Color(0xFFFFC837), Color(0xFFFF8008)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+}
 
 class DestinationDetailScreen extends StatefulWidget {
   final String name;
@@ -23,23 +47,35 @@ class DestinationDetailScreen extends StatefulWidget {
 
 class _DestinationDetailScreenState extends State<DestinationDetailScreen>
     with SingleTickerProviderStateMixin {
-  static const Color primaryPurple = Color(0xFF8B7B9E);
-  static const Color darkPurple = Colors.deepPurple;
-  static const Color lightPurple = Color(0xFFF0ECF4);
-
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
+  late final AnimationController _animationController;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<double> _slideAnimation;
   bool _isFavorite = false;
+
+  static const _animationDuration = Duration(milliseconds: 1200);
 
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
+  }
+
+  void _initializeAnimations() {
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: _animationDuration,
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+    _slideAnimation = Tween<double>(begin: 30.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.2, 0.8, curve: Curves.easeOutCubic),
+      ),
     );
     _animationController.forward();
   }
@@ -50,9 +86,8 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen>
     super.dispose();
   }
 
-  // Sample data - you can expand this with real data
-  String get description {
-    final descriptions = {
+  String get _description {
+    const descriptions = {
       'Taj Mahal':
           'An ivory-white marble mausoleum on the right bank of the river Yamuna. Built by Mughal emperor Shah Jahan in memory of his wife Mumtaz Mahal, it is widely recognized as the jewel of Muslim art in India and one of the universally admired masterpieces of the world\'s heritage.',
       'Jaipur Palace':
@@ -70,38 +105,66 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen>
         'Discover this amazing destination in India with rich culture, heritage, and natural beauty.';
   }
 
-  List<Map<String, dynamic>> get travelExpenses {
-    return [
-      {'name': 'Accommodation', 'cost': 3000, 'icon': Icons.hotel},
-      {'name': 'Transportation', 'cost': 1500, 'icon': Icons.directions_car},
-      {'name': 'Food & Dining', 'cost': 2000, 'icon': Icons.restaurant},
-      {'name': 'Entry Fees', 'cost': 500, 'icon': Icons.confirmation_number},
-      {'name': 'Activities', 'cost': 1000, 'icon': Icons.local_activity},
-    ];
+  List<ExpenseItem> get _travelExpenses => const [
+    ExpenseItem(name: 'Accommodation', cost: 3000, icon: Icons.hotel),
+    ExpenseItem(name: 'Transportation', cost: 1500, icon: Icons.directions_car),
+    ExpenseItem(name: 'Food & Dining', cost: 2000, icon: Icons.restaurant),
+    ExpenseItem(name: 'Entry Fees', cost: 500, icon: Icons.confirmation_number),
+    ExpenseItem(name: 'Activities', cost: 1000, icon: Icons.local_activity),
+  ];
+
+  double get _totalCost =>
+      _travelExpenses.fold(0.0, (sum, item) => sum + item.cost);
+
+  void _toggleFavorite() {
+    setState(() => _isFavorite = !_isFavorite);
+    _showSnackBar(
+      _isFavorite ? 'Added to favorites' : 'Removed from favorites',
+    );
   }
 
-  double get totalCost {
-    return travelExpenses.fold(0.0, (sum, item) => sum + item['cost']);
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: DestinationTheme.darkColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: DestinationTheme.lightBg,
       body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
         slivers: [
           _buildAppBar(),
           SliverToBoxAdapter(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(0, _slideAnimation.value),
+                  child: Opacity(opacity: _fadeAnimation.value, child: child),
+                );
+              },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeaderSection(),
+                  const SizedBox(height: 8),
+                  _buildQuickStats(),
+                  const SizedBox(height: 24),
                   _buildDescriptionSection(),
+                  const SizedBox(height: 24),
                   _buildCostBreakdown(),
+                  const SizedBox(height: 24),
                   _buildActionButtons(),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -113,70 +176,32 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen>
 
   Widget _buildAppBar() {
     return SliverAppBar(
-      expandedHeight: 450,
+      expandedHeight: 400,
       pinned: true,
-      backgroundColor: darkPurple,
+      stretch: true,
+      backgroundColor: DestinationTheme.cardBg,
       elevation: 0,
-      leading: Container(
-        margin: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: IconButton(
-          icon: const Icon(Icons.arrow_back, color: darkPurple),
+      leading: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: _GlassIconButton(
+          icon: Icons.arrow_back_ios_new,
           onPressed: () => Navigator.pop(context),
         ),
       ),
       actions: [
-        Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: IconButton(
-            icon: Icon(
-              _isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: _isFavorite ? Colors.red : darkPurple,
-            ),
-            onPressed: () {
-              setState(() {
-                _isFavorite = !_isFavorite;
-              });
-            },
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: _GlassIconButton(
+            icon: _isFavorite ? Icons.favorite : Icons.favorite_border,
+            iconColor: _isFavorite ? Colors.red : DestinationTheme.darkColor,
+            onPressed: _toggleFavorite,
           ),
         ),
-        Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.share, color: darkPurple),
-            onPressed: () {},
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0, top: 8, bottom: 8),
+          child: _GlassIconButton(
+            icon: Icons.share_outlined,
+            onPressed: () => _showSnackBar('Share feature coming soon!'),
           ),
         ),
       ],
@@ -189,29 +214,21 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen>
               child: Image.network(
                 widget.coverImage,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: primaryPurple,
-                    child: const Icon(
-                      Icons.image,
-                      size: 100,
-                      color: Colors.white,
-                    ),
-                  );
-                },
+                loadingBuilder: _imageLoadingBuilder,
+                errorBuilder: _imageErrorBuilder,
               ),
             ),
-            Container(
+            DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.3),
+                    Colors.black.withAlpha(102),
                     Colors.transparent,
-                    Colors.black.withOpacity(0.8),
+                    Colors.black.withAlpha(179),
                   ],
-                  stops: const [0.0, 0.5, 1.0],
+                  stops: const [0.0, 0.4, 1.0],
                 ),
               ),
             ),
@@ -221,91 +238,186 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen>
     );
   }
 
-  Widget _buildHeaderSection() {
+  Widget _imageLoadingBuilder(
+    BuildContext context,
+    Widget child,
+    ImageChunkEvent? loadingProgress,
+  ) {
+    if (loadingProgress == null) return child;
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
+      color: DestinationTheme.lightBg,
+      child: Center(
+        child: CircularProgressIndicator(
+          value: loadingProgress.expectedTotalBytes != null
+              ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+              : null,
+          valueColor: const AlwaysStoppedAnimation<Color>(
+            DestinationTheme.primaryColor,
+          ),
         ),
       ),
-      transform: Matrix4.translationValues(0, -30, 0),
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-      child: Column(
+    );
+  }
+
+  Widget _imageErrorBuilder(
+    BuildContext context,
+    Object error,
+    StackTrace? stackTrace,
+  ) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: DestinationTheme.primaryGradient,
+      ),
+      child: const Center(
+        child: Icon(Icons.landscape, size: 100, color: Colors.white70),
+      ),
+    );
+  }
+
+  Widget _buildHeaderSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: DestinationTheme.cardBg,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(32),
+          topRight: Radius.circular(32),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(13),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      transform: Matrix4.translationValues(0, -32, 0),
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   widget.name,
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.bold,
-                    color: darkPurple,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    color: DestinationTheme.darkColor,
+                    height: 1.2,
                     letterSpacing: -0.5,
                   ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.amber.shade400, Colors.amber.shade600],
-                  ),
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.amber.withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.white, size: 22),
-                    const SizedBox(width: 6),
-                    Text(
-                      widget.rating,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                _buildLocationRow(),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: lightPurple,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(Icons.location_on, color: primaryPurple, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  '${widget.city}, ${widget.state}',
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Colors.grey.shade700,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
+          const SizedBox(width: 12),
+          _buildRatingBadge(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationRow() {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                DestinationTheme.gradientStart.withAlpha(26),
+                DestinationTheme.gradientEnd.withAlpha(26),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Icon(
+            Icons.location_on_rounded,
+            color: DestinationTheme.primaryColor,
+            size: 18,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            '${widget.city}, ${widget.state}',
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRatingBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: DestinationTheme.ratingGradient,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF8008).withAlpha(102),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.star_rounded, color: Colors.white, size: 20),
+          const SizedBox(width: 6),
+          Text(
+            widget.rating,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 18,
+              color: Colors.white,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickStats() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        children: [
+          Expanded(
+            child: _StatCard(
+              icon: Icons.access_time_rounded,
+              value: '2-3 Days',
+              label: 'Duration',
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _StatCard(
+              icon: Icons.groups_rounded,
+              value: 'All Ages',
+              label: 'Suitable For',
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _StatCard(
+              icon: Icons.camera_alt_rounded,
+              value: 'Photo Spot',
+              label: 'Type',
+            ),
           ),
         ],
       ),
@@ -319,39 +431,40 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'About This Place',
+            'About This Destination',
             style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: darkPurple,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: DestinationTheme.darkColor,
               letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              color: DestinationTheme.cardBg,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.grey.shade200),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.black.withAlpha(10),
                   blurRadius: 20,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
             child: Text(
-              description,
+              _description,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 15,
                 height: 1.8,
-                color: Colors.grey.shade800,
-                letterSpacing: 0.2,
+                color: Colors.grey.shade700,
+                letterSpacing: 0.3,
+                fontWeight: FontWeight.w400,
               ),
             ),
           ),
-          const SizedBox(height: 32),
         ],
       ),
     );
@@ -363,142 +476,142 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [primaryPurple.withOpacity(0.8), darkPurple],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: primaryPurple.withOpacity(0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Estimated Cost',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      '₹${totalCost.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.info_outline, size: 16, color: Colors.white70),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Per person for 2-3 days',
-                      style: TextStyle(fontSize: 14, color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ],
+          const Text(
+            'Budget Breakdown',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: DestinationTheme.darkColor,
+              letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 24),
-          ...travelExpenses.asMap().entries.map((entry) {
-            int index = entry.key;
-            var expense = entry.value;
-            return TweenAnimationBuilder(
-              duration: Duration(milliseconds: 400 + (index * 100)),
+          const SizedBox(height: 16),
+          _buildTotalCostCard(),
+          const SizedBox(height: 20),
+          ..._travelExpenses.asMap().entries.map((entry) {
+            return TweenAnimationBuilder<double>(
+              duration: Duration(milliseconds: 600 + (entry.key * 100)),
               tween: Tween<double>(begin: 0, end: 1),
-              builder: (context, double value, child) {
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
                 return Transform.translate(
-                  offset: Offset(0, 20 * (1 - value)),
-                  child: Opacity(
-                    opacity: value,
-                    child: _buildExpenseItem(
-                      expense['name'],
-                      expense['cost'],
-                      expense['icon'],
-                    ),
-                  ),
+                  offset: Offset(30 * (1 - value), 0),
+                  child: Opacity(opacity: value, child: child),
                 );
               },
+              child: _ExpenseItemCard(expense: entry.value),
             );
           }),
-          const SizedBox(height: 32),
         ],
       ),
     );
   }
 
-  Widget _buildExpenseItem(String name, double cost, IconData icon) {
+  Widget _buildTotalCostCard() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        gradient: DestinationTheme.primaryGradient,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            blurRadius: 15,
-            offset: const Offset(0, 4),
+            color: DestinationTheme.primaryColor.withAlpha(77),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [lightPurple, Colors.white],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Total Estimated Cost',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white70,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '₹',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        _totalCost.toStringAsFixed(0),
+                        style: const TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          height: 1,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: primaryPurple, size: 26),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(51),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withAlpha(77)),
+                ),
+                child: const Text(
+                  'Per Person',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 18),
-          Expanded(
-            child: Text(
-              name,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-          ),
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: lightPurple,
-              borderRadius: BorderRadius.circular(10),
+              color: Colors.white.withAlpha(38),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(
-              '₹${cost.toStringAsFixed(0)}',
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: darkPurple,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 14,
+                  color: Colors.white.withAlpha(230),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Estimated for 2-3 days trip',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white.withAlpha(230),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -511,102 +624,344 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen>
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
-          SizedBox(
-            width: double.infinity,
-            height: 58,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shadowColor: Colors.transparent,
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: Ink(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [primaryPurple, darkPurple],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: primaryPurple.withOpacity(0.5),
-                      blurRadius: 15,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Container(
-                  alignment: Alignment.center,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          _PrimaryActionButton(
+            label: 'Plan Your Trip',
+            icon: Icons.calendar_month_rounded,
+            onPressed: () => Navigator.pop(context),
+          ),
+          const SizedBox(height: 14),
+          _SecondaryActionButton(
+            label: 'View More Details',
+            icon: Icons.explore_rounded,
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
                     children: const [
-                      Icon(Icons.flight_takeoff, size: 22),
-                      SizedBox(width: 10),
-                      Text(
-                        'Plan Your Trip Here',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
+                      Icon(Icons.explore_rounded, color: Colors.white),
+                      SizedBox(width: 12),
+                      Text('More details coming soon!'),
                     ],
                   ),
+                  backgroundColor: DestinationTheme.darkColor,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: const EdgeInsets.all(16),
                 ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// MARK: - Supporting Widgets
+
+class _GlassIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+  final Color iconColor;
+
+  const _GlassIconButton({
+    required this.icon,
+    required this.onPressed,
+    this.iconColor = DestinationTheme.darkColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withAlpha(230),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withAlpha(77), width: 1.5),
+          ),
+          child: IconButton(
+            icon: Icon(icon, color: iconColor, size: 20),
+            onPressed: onPressed,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+
+  const _StatCard({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: DestinationTheme.cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(8),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  DestinationTheme.gradientStart.withAlpha(26),
+                  DestinationTheme.gradientEnd.withAlpha(26),
+                ],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: DestinationTheme.primaryColor, size: 20),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: DestinationTheme.darkColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ExpenseItem {
+  final String name;
+  final double cost;
+  final IconData icon;
+
+  const ExpenseItem({
+    required this.name,
+    required this.cost,
+    required this.icon,
+  });
+}
+
+class _ExpenseItemCard extends StatelessWidget {
+  final ExpenseItem expense;
+
+  const _ExpenseItemCard({required this.expense});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: DestinationTheme.cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(8),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  DestinationTheme.gradientStart.withAlpha(26),
+                  DestinationTheme.gradientEnd.withAlpha(26),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              expense.icon,
+              color: DestinationTheme.primaryColor,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              expense.name,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: DestinationTheme.darkColor,
+                letterSpacing: 0.2,
               ),
             ),
           ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            height: 58,
-            child: OutlinedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('More features coming soon!'),
-                    backgroundColor: primaryPurple,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: primaryPurple,
-                side: BorderSide(color: primaryPurple, width: 2.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.explore, size: 22),
-                  SizedBox(width: 10),
-                  Text(
-                    'Explore More Details',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  DestinationTheme.gradientStart.withAlpha(26),
+                  DestinationTheme.gradientEnd.withAlpha(26),
                 ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '₹${expense.cost.toStringAsFixed(0)}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: DestinationTheme.primaryColor,
+                letterSpacing: 0.5,
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PrimaryActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _PrimaryActionButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 62,
+      decoration: BoxDecoration(
+        gradient: DestinationTheme.primaryGradient,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: DestinationTheme.primaryColor.withAlpha(102),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(18),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 22, color: Colors.white),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondaryActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _SecondaryActionButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 62,
+      decoration: BoxDecoration(
+        color: DestinationTheme.cardBg,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: DestinationTheme.primaryColor, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(8),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(18),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 22, color: DestinationTheme.primaryColor),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: DestinationTheme.primaryColor,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
