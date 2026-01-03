@@ -26,25 +26,27 @@ class DayItinerary {
 
 class TripDetails {
   final String tripName;
-  final String place; // Add place
-  final int members; // Add members count
-  final DateTime startDate; // Add start date
-  final DateTime endDate; // Add end date
-  final String date; // Keep for display
+  final String place;
+  final int members;
+  final DateTime startDate;
+  final DateTime endDate;
+  final String date;
   final String days;
   final String status;
   final List<DayItinerary> itinerary;
+  final String? imageUrl; // Add image URL
 
   TripDetails({
     required this.tripName,
-    required this.place, // Add to constructor
-    required this.members, // Add to constructor
-    required this.startDate, // Add to constructor
-    required this.endDate, // Add to constructor
+    required this.place,
+    required this.members,
+    required this.startDate,
+    required this.endDate,
     required this.date,
     required this.days,
     required this.status,
     required this.itinerary,
+    this.imageUrl, // Add to constructor
   });
 }
 
@@ -155,7 +157,9 @@ class _ItineraryViewScreenState extends State<ItineraryViewScreen>
     final progress = totalCount > 0 ? completedCount / totalCount : 0.0;
 
     return SliverAppBar(
-      expandedHeight: 320, // Increased height
+      expandedHeight: widget.tripDetails.imageUrl != null
+          ? 420
+          : 320, // Increased height for image
       floating: false,
       pinned: true,
       backgroundColor: primaryPurple,
@@ -168,158 +172,184 @@ class _ItineraryViewScreenState extends State<ItineraryViewScreen>
         onPressed: () => Navigator.pop(context),
       ),
       flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [primaryPurple, primaryPurple.withOpacity(0.7)],
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: isWeb ? 60 : 24,
-                vertical: 20,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.flight_takeoff,
-                          color: Colors.white,
-                          size: 28,
-                        ),
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background image if available
+            if (widget.tripDetails.imageUrl != null)
+              Image.network(
+                widget.tripDetails.imageUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [primaryPurple, primaryPurple.withOpacity(0.7)],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    ),
+                  );
+                },
+              ),
+            // Gradient overlay
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.6),
+                    Colors.black.withOpacity(0.8),
+                  ],
+                ),
+              ),
+            ),
+            // Content
+            SafeArea(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isWeb ? 60 : 24,
+                  vertical: 20,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.flight_takeoff,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Your Journey',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                widget.tripDetails.tripName,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          color: Colors.white.withOpacity(0.9),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          widget.tripDetails.place,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.95),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Icon(
+                          Icons.people,
+                          color: Colors.white.withOpacity(0.9),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${widget.tripDetails.members} Members',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.95),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        _buildHeaderChip(
+                          Icons.calendar_today,
+                          widget.tripDetails.date,
+                        ),
+                        const SizedBox(width: 12),
+                        _buildHeaderChip(
+                          Icons.wb_sunny_outlined,
+                          '${widget.tripDetails.days} Days',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Your Journey',
+                            Text(
+                              'Progress',
                               style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const SizedBox(height: 4),
                             Text(
-                              widget.tripDetails.tripName,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 28,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.5,
+                              '$completedCount / $totalCount activities',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Add place and members info
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        color: Colors.white.withOpacity(0.9),
-                        size: 18,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        widget.tripDetails.place,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.95),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Icon(
-                        Icons.people,
-                        color: Colors.white.withOpacity(0.9),
-                        size: 18,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${widget.tripDetails.members} Members',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.95),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      _buildHeaderChip(
-                        Icons.calendar_today,
-                        widget.tripDetails.date,
-                      ),
-                      const SizedBox(width: 12),
-                      _buildHeaderChip(
-                        Icons.wb_sunny_outlined,
-                        '${widget.tripDetails.days} Days',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Progress',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            backgroundColor: Colors.white.withOpacity(0.2),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              progress == 1.0 ? Colors.green : Colors.white,
                             ),
+                            minHeight: 8,
                           ),
-                          Text(
-                            '$completedCount / $totalCount activities',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          backgroundColor: Colors.white.withOpacity(0.2),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                          minHeight: 8,
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -596,7 +626,6 @@ class _ItineraryViewScreenState extends State<ItineraryViewScreen>
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Checkbox
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: AnimatedContainer(
@@ -619,12 +648,10 @@ class _ItineraryViewScreenState extends State<ItineraryViewScreen>
                 ),
               ),
               const SizedBox(width: 16),
-              // Activity details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Time badge
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -655,13 +682,15 @@ class _ItineraryViewScreenState extends State<ItineraryViewScreen>
                                   : primaryPurple,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
+                              decoration: activity.isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : null,
                             ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 10),
-                    // Activity name as heading
                     Text(
                       activity.name,
                       style: TextStyle(
@@ -677,7 +706,6 @@ class _ItineraryViewScreenState extends State<ItineraryViewScreen>
                         decorationThickness: 2,
                       ),
                     ),
-                    // Description below
                     if (activity.description != null) ...[
                       const SizedBox(height: 8),
                       Text(
@@ -689,11 +717,14 @@ class _ItineraryViewScreenState extends State<ItineraryViewScreen>
                           fontSize: 13,
                           fontWeight: FontWeight.w400,
                           height: 1.4,
+                          decoration: activity.isCompleted
+                              ? TextDecoration.lineThrough
+                              : null,
+                          decorationColor: Colors.grey[400],
                         ),
                       ),
                     ],
                     const SizedBox(height: 12),
-                    // Expense badge
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
@@ -716,6 +747,7 @@ class _ItineraryViewScreenState extends State<ItineraryViewScreen>
                           decoration: activity.isCompleted
                               ? TextDecoration.lineThrough
                               : null,
+                          decorationColor: Colors.grey[600],
                         ),
                       ),
                     ),

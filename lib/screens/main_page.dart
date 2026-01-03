@@ -894,7 +894,6 @@ class _MainPageState extends State<MainPage> {
   }
 
   void _navigateToItinerary(Map<String, dynamic> trip) {
-    // Create sample itinerary data
     final tripDetails = TripDetails(
       tripName: trip['name']!,
       place: trip['place']!,
@@ -904,6 +903,7 @@ class _MainPageState extends State<MainPage> {
       date: trip['date']!,
       days: trip['days']!,
       status: trip['status']!,
+      imageUrl: trip['image']!, // Add image URL
       itinerary: [
         DayItinerary(
           dayNumber: 1,
@@ -995,37 +995,57 @@ class _MainPageState extends State<MainPage> {
         children: [
           Expanded(
             flex: 3,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
               ),
               child: Stack(
                 children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
-                    child: Image.network(
-                      imageUrl,
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: isUpcoming
-                              ? primaryPurple.withOpacity(0.1)
-                              : lightPurple,
-                          child: Center(
-                            child: Icon(
-                              Icons.photo_camera_rounded,
-                              size: 40,
-                              color: primaryPurple.withOpacity(0.4),
-                            ),
+                  // Image with proper fit
+                  Image.network(
+                    imageUrl,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: lightPurple,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                : null,
+                            color: primaryPurple,
                           ),
-                        );
-                      },
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: lightPurple,
+                        child: Center(
+                          child: Icon(
+                            Icons.photo_camera_rounded,
+                            size: 40,
+                            color: primaryPurple.withOpacity(0.4),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  // Gradient overlay for better text visibility
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.3),
+                        ],
+                      ),
                     ),
                   ),
                   Positioned(
