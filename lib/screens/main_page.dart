@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:globe_trotter/components/section_dialog.dart';
+import 'package:globe_trotter/components/create_dialog.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -982,12 +982,18 @@ class _MainPageState extends State<MainPage> {
   Widget _buildFAB() {
     return FloatingActionButton.extended(
       onPressed: () async {
-    final sections = await showActivityDialog(context);
-    if (sections != null) {
-      // Handle saved sections
-      print('Saved ${sections.length} sections');
-    }
-  },
+        final result = await showCreateTripDialog(context);
+        if (!mounted || result == null) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Trip: ${result.tripName.isEmpty ? '(unnamed)' : result.tripName} • ${result.place.isEmpty ? '(no place)' : result.place}',
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      },
       backgroundColor: primaryPurple,
       elevation: 4,
       hoverElevation: 8,
