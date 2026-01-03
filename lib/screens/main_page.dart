@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:globe_trotter/components/create_dialog.dart';
 import 'package:globe_trotter/screens/calendar_view.dart';
+import 'package:globe_trotter/screens/profile_screen.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
