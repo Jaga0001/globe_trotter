@@ -1,28 +1,43 @@
 import 'package:flutter/material.dart';
-import 'username_screen.dart';
 
-class RegistrationScreen extends StatefulWidget {
-  const RegistrationScreen({Key? key}) : super(key: key);
+class UsernameScreen extends StatefulWidget {
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String phone;
+  final String city;
+  final String country;
+  final String additionalInfo;
+
+  const UsernameScreen({
+    Key? key,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.phone,
+    required this.city,
+    required this.country,
+    required this.additionalInfo,
+  }) : super(key: key);
 
   @override
-  State<RegistrationScreen> createState() => _RegistrationScreenState();
+  State<UsernameScreen> createState() => _UsernameScreenState();
 }
 
-class _RegistrationScreenState extends State<RegistrationScreen>
+class _UsernameScreenState extends State<UsernameScreen>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _countryController = TextEditingController();
-  final _additionalInfoController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   late AnimationController _fadeController;
   late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void initState() {
@@ -53,13 +68,9 @@ class _RegistrationScreenState extends State<RegistrationScreen>
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _cityController.dispose();
-    _countryController.dispose();
-    _additionalInfoController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _fadeController.dispose();
     _slideController.dispose();
     super.dispose();
@@ -192,7 +203,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                               ],
                             ),
                             child: const Icon(
-                              Icons.person_add_outlined,
+                              Icons.lock_outline,
                               color: Colors.white,
                               size: 40,
                             ),
@@ -201,7 +212,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
 
                           // Title
                           const Text(
-                            'Create Account',
+                            'Set Up Credentials',
                             style: TextStyle(
                               color: Color(0xFF1a1a2e),
                               fontSize: 28,
@@ -211,7 +222,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Join GlobeTrotter today',
+                            'Create your login credentials',
                             style: TextStyle(
                               color: Colors.black.withOpacity(0.5),
                               fontSize: 15,
@@ -225,99 +236,57 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                             key: _formKey,
                             child: Column(
                               children: [
-                                // First Name and Last Name Row
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildTextField(
-                                        controller: _firstNameController,
-                                        hint: 'First Name',
-                                        icon: Icons.person_outline,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: _buildTextField(
-                                        controller: _lastNameController,
-                                        hint: 'Last Name',
-                                        icon: Icons.person_outline,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-
-                                // Email Address
+                                // Username
                                 _buildTextField(
-                                  controller: _emailController,
-                                  hint: 'Email Address',
-                                  icon: Icons.email_outlined,
+                                  controller: _usernameController,
+                                  hint: 'Username',
+                                  icon: Icons.account_circle_outlined,
                                 ),
                                 const SizedBox(height: 16),
 
-                                // Phone Number
-                                _buildTextField(
-                                  controller: _phoneController,
-                                  hint: 'Phone Number',
-                                  icon: Icons.phone_outlined,
+                                // Password
+                                _buildPasswordField(
+                                  controller: _passwordController,
+                                  hint: 'Password',
+                                  obscure: _obscurePassword,
+                                  onToggle: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
                                 ),
                                 const SizedBox(height: 16),
 
-                                // City and Country Row
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildTextField(
-                                        controller: _cityController,
-                                        hint: 'City',
-                                        icon: Icons.location_city_outlined,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: _buildTextField(
-                                        controller: _countryController,
-                                        hint: 'Country',
-                                        icon: Icons.flag_outlined,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-
-                                // Additional Information
-                                _buildTextFieldLarge(
-                                  controller: _additionalInfoController,
-                                  hint: 'Additional Information (optional)',
-                                  icon: Icons.info_outline,
+                                // Confirm Password
+                                _buildPasswordField(
+                                  controller: _confirmPasswordController,
+                                  hint: 'Confirm Password',
+                                  obscure: _obscureConfirmPassword,
+                                  onToggle: () {
+                                    setState(() {
+                                      _obscureConfirmPassword =
+                                          !_obscureConfirmPassword;
+                                    });
+                                  },
+                                  isConfirm: true,
                                 ),
                               ],
                             ),
                           ),
                           const SizedBox(height: 32),
 
-                          // Register Button
+                          // Complete Registration Button
                           SizedBox(
                             width: double.infinity,
                             height: 56,
                             child: ElevatedButton(
                               onPressed: () {
                                 if (_formKey.currentState!.validate()) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => UsernameScreen(
-                                        firstName: _firstNameController.text,
-                                        lastName: _lastNameController.text,
-                                        email: _emailController.text,
-                                        phone: _phoneController.text,
-                                        city: _cityController.text,
-                                        country: _countryController.text,
-                                        additionalInfo:
-                                            _additionalInfoController.text,
-                                      ),
-                                    ),
+                                  _showSnackBar(
+                                    'Registration completed successfully!',
+                                    isError: false,
                                   );
+                                  // Navigate to home or login screen
                                 }
                               },
                               style:
@@ -343,7 +312,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                                         ),
                                   ),
                               child: const Text(
-                                'Create Account',
+                                'Complete Registration',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -354,12 +323,12 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                           ),
                           const SizedBox(height: 24),
 
-                          // Back to login
+                          // Back to previous step
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Already have an account? ',
+                                'Want to change details? ',
                                 style: TextStyle(
                                   color: Colors.black.withOpacity(0.5),
                                   fontSize: 14,
@@ -376,7 +345,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                                       MaterialTapTargetSize.shrinkWrap,
                                 ),
                                 child: const Text(
-                                  'Sign In',
+                                  'Go Back',
                                   style: TextStyle(
                                     color: Color(0xFF6d4c7d),
                                     fontSize: 14,
@@ -471,19 +440,24 @@ class _RegistrationScreenState extends State<RegistrationScreen>
         if (value == null || value.isEmpty) {
           return 'This field is required';
         }
+        if (value.length < 4) {
+          return 'Username must be at least 4 characters';
+        }
         return null;
       },
     );
   }
 
-  Widget _buildTextFieldLarge({
+  Widget _buildPasswordField({
     required TextEditingController controller,
     required String hint,
-    required IconData icon,
+    required bool obscure,
+    required VoidCallback onToggle,
+    bool isConfirm = false,
   }) {
     return TextFormField(
       controller: controller,
-      maxLines: 3,
+      obscureText: obscure,
       style: const TextStyle(color: Color(0xFF1a1a2e), fontSize: 16),
       decoration: InputDecoration(
         hintText: hint,
@@ -491,9 +465,18 @@ class _RegistrationScreenState extends State<RegistrationScreen>
           color: Colors.black.withOpacity(0.4),
           fontSize: 15,
         ),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.only(bottom: 40),
-          child: Icon(icon, color: const Color(0xFF6d4c7d), size: 22),
+        prefixIcon: const Icon(
+          Icons.lock_outline,
+          color: Color(0xFF6d4c7d),
+          size: 22,
+        ),
+        suffixIcon: IconButton(
+          icon: Icon(
+            obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            color: const Color(0xFF6d4c7d),
+            size: 22,
+          ),
+          onPressed: onToggle,
         ),
         filled: true,
         fillColor: const Color(0xFF6d4c7d).withOpacity(0.05),
@@ -515,11 +498,27 @@ class _RegistrationScreenState extends State<RegistrationScreen>
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: Color(0xFF6d4c7d), width: 2),
         ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFd32f2f), width: 1.5),
+        ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,
           vertical: 18,
         ),
       ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'This field is required';
+        }
+        if (value.length < 6) {
+          return 'Password must be at least 6 characters';
+        }
+        if (isConfirm && value != _passwordController.text) {
+          return 'Passwords do not match';
+        }
+        return null;
+      },
     );
   }
 }
