@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:globe_trotter/components/create_dialog.dart';
 import 'package:globe_trotter/screens/calendar_view.dart';
+import 'package:globe_trotter/screens/profile_screen.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -269,38 +270,33 @@ class _MainPageState extends State<MainPage> {
             tooltip: 'Notifications',
           ),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: lightPurple,
-              borderRadius: BorderRadius.circular(24),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProfileSettingsPageWeb(
+                  themeColor: primaryPurple,
+                  accentColor: accentPurple,
+                ),
+              ),
             ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: primaryPurple,
-                  child: const Text(
-                    'RD',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Rahul D.',
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundColor: primaryPurple,
+                child: const Text(
+                  'RD',
                   style: TextStyle(
-                    color: darkPurple,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
                   ),
                 ),
-                const SizedBox(width: 4),
-                Icon(Icons.keyboard_arrow_down, color: darkPurple, size: 20),
-              ],
+              ),
             ),
           ),
         ],
