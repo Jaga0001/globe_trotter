@@ -885,17 +885,47 @@ class _MainPageState extends State<MainPage> {
         DayItinerary(
           dayNumber: 1,
           activities: [
-            Activity(name: 'Morning Temple Visit', expense: 500),
-            Activity(name: 'City Tour', expense: 1200),
-            Activity(name: 'Local Market Shopping', expense: 2000),
+            Activity(
+              name: 'Morning Temple Visit',
+              description:
+                  'Visit the ancient temple and participate in morning prayers. Experience the spiritual ambiance and architectural beauty.',
+              expense: 500,
+            ),
+            Activity(
+              name: 'City Tour',
+              description:
+                  'Explore major landmarks including historical monuments, local markets, and cultural centers with a guided tour.',
+              expense: 1200,
+            ),
+            Activity(
+              name: 'Local Market Shopping',
+              description:
+                  'Browse through traditional handicrafts, textiles, and souvenirs at the bustling local bazaar.',
+              expense: 2000,
+            ),
           ],
         ),
         DayItinerary(
           dayNumber: 2,
           activities: [
-            Activity(name: 'Fort Exploration', expense: 800),
-            Activity(name: 'Traditional Lunch', expense: 600),
-            Activity(name: 'Evening Cultural Show', expense: 1500),
+            Activity(
+              name: 'Fort Exploration',
+              description:
+                  'Discover the magnificent fort with its impressive architecture, royal chambers, and panoramic city views.',
+              expense: 800,
+            ),
+            Activity(
+              name: 'Traditional Lunch',
+              description:
+                  'Enjoy authentic local cuisine at a heritage restaurant featuring regional specialties and traditional recipes.',
+              expense: 600,
+            ),
+            Activity(
+              name: 'Evening Cultural Show',
+              description:
+                  'Watch a mesmerizing performance of traditional dance and music showcasing the region\'s rich cultural heritage.',
+              expense: 1500,
+            ),
           ],
         ),
       ],

@@ -549,87 +549,95 @@ class _ItineraryViewScreenState extends State<ItineraryViewScreen>
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: activity.isCompleted ? Colors.green : Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: activity.isCompleted
-                        ? Colors.green
-                        : primaryPurple.withOpacity(0.4),
-                    width: 2,
+              // Checkbox
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: activity.isCompleted ? Colors.green : Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: activity.isCompleted
+                          ? Colors.green
+                          : primaryPurple.withOpacity(0.4),
+                      width: 2,
+                    ),
                   ),
+                  child: activity.isCompleted
+                      ? const Icon(Icons.check, color: Colors.white, size: 16)
+                      : null,
                 ),
-                child: activity.isCompleted
-                    ? const Icon(Icons.check, color: Colors.white, size: 16)
-                    : null,
               ),
               const SizedBox(width: 16),
+              // Activity details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Activity name as heading
                     Text(
                       activity.name,
                       style: TextStyle(
                         color: activity.isCompleted
                             ? Colors.grey[500]
                             : Colors.black87,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
                         decoration: activity.isCompleted
                             ? TextDecoration.lineThrough
                             : null,
                         decorationColor: Colors.grey[500],
+                        decorationThickness: 2,
                       ),
                     ),
+                    // Description below
                     if (activity.description != null) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Text(
                         activity.description!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: activity.isCompleted
                               ? Colors.grey[400]
                               : Colors.grey[600],
-                          fontSize: 12,
+                          fontSize: 13,
                           fontWeight: FontWeight.w400,
-                          height: 1.3,
+                          height: 1.4,
                         ),
                       ),
                     ],
+                    const SizedBox(height: 12),
+                    // Expense badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: activity.isCompleted
+                            ? Colors.grey[200]
+                            : primaryPurple.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '₹${activity.expense.toStringAsFixed(0)}',
+                        style: TextStyle(
+                          color: activity.isCompleted
+                              ? Colors.grey[600]
+                              : primaryPurple,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          decoration: activity.isCompleted
+                              ? TextDecoration.lineThrough
+                              : null,
+                        ),
+                      ),
+                    ),
                   ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: activity.isCompleted
-                      ? Colors.grey[200]
-                      : primaryPurple.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '₹${activity.expense.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    color: activity.isCompleted
-                        ? Colors.grey[600]
-                        : primaryPurple,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    decoration: activity.isCompleted
-                        ? TextDecoration.lineThrough
-                        : null,
-                  ),
                 ),
               ),
             ],
