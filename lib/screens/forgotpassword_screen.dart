@@ -1,72 +1,66 @@
 import 'package:flutter/material.dart';
-import 'package:globe_trotter/screens/forgotpassword_screen.dart';
-import 'package:globe_trotter/screens/register_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({Key? key}) : super(key: key);
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     with TickerProviderStateMixin {
-  late TextEditingController _usernameController;
-  late TextEditingController _passwordController;
-  late AnimationController _fadeController;
-  late AnimationController _slideController;
+  late TextEditingController _emailController;
+  late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  bool _isPasswordVisible = false;
 
   @override
   void initState() {
     super.initState();
-    _usernameController = TextEditingController();
-    _passwordController = TextEditingController();
+    _emailController = TextEditingController();
 
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+    _animationController = AnimationController(
       vsync: this,
-    );
-
-    _slideController = AnimationController(
       duration: const Duration(milliseconds: 800),
-      vsync: this,
     );
 
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
     _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
         );
 
-    _fadeController.forward();
-    _slideController.forward();
+    _animationController.forward();
   }
 
   @override
   void dispose() {
-    _usernameController.dispose();
-    _passwordController.dispose();
-    _fadeController.dispose();
-    _slideController.dispose();
+    _emailController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
-  void _handleLogin() {
-    final username = _usernameController.text;
-    final password = _passwordController.text;
+  void _handleResetPassword() {
+    final email = _emailController.text.trim();
 
-    if (username.isEmpty || password.isEmpty) {
-      _showSnackBar('Please fill in all fields', isError: true);
+    if (email.isEmpty) {
+      _showSnackBar('Please enter your email address', isError: true);
+    } else if (!_isValidEmail(email)) {
+      _showSnackBar('Please enter a valid email address', isError: true);
     } else {
-      _showSnackBar('Welcome to Odoo Hackathon, $username!', isError: false);
+      _showSnackBar('Password reset link sent to $email', isError: false);
+      // Add your password reset logic here
     }
+  }
+
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
   }
 
   void _showSnackBar(String message, {required bool isError}) {
@@ -134,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen>
                   position: _slideAnimation,
                   child: Container(
                     width: 440,
-                    constraints: const BoxConstraints(maxHeight: 680),
+                    constraints: const BoxConstraints(maxHeight: 600),
                     padding: const EdgeInsets.all(48),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -178,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen>
                             ],
                           ),
                           child: const Icon(
-                            Icons.travel_explore,
+                            Icons.lock_reset,
                             color: Colors.white,
                             size: 48,
                           ),
@@ -187,7 +181,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                         // Title
                         const Text(
-                          'GlobeTrotter',
+                          'Forgot Password?',
                           style: TextStyle(
                             color: Color(0xFF1a1a2e),
                             fontSize: 28,
@@ -197,7 +191,8 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Sign in to continue',
+                          'Enter your email to reset your password',
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.black.withOpacity(0.5),
                             fontSize: 15,
@@ -206,29 +201,20 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                         const SizedBox(height: 40),
 
-                        // Username field
+                        // Email field
                         _buildTextField(
-                          controller: _usernameController,
-                          hint: 'Username',
-                          icon: Icons.person_outline,
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Password field
-                        _buildTextField(
-                          controller: _passwordController,
-                          hint: 'Password',
-                          icon: Icons.lock_outline,
-                          isPassword: true,
+                          controller: _emailController,
+                          hint: 'Email Address',
+                          icon: Icons.email_outlined,
                         ),
                         const SizedBox(height: 32),
 
-                        // Login button
+                        // Reset Password button
                         SizedBox(
                           width: double.infinity,
                           height: 56,
                           child: ElevatedButton(
-                            onPressed: _handleLogin,
+                            onPressed: _handleResetPassword,
                             style:
                                 ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF6d4c7d),
@@ -252,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen>
                                       ),
                                 ),
                             child: const Text(
-                              'Sign In',
+                              'Send Reset Link',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -263,64 +249,30 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                         const SizedBox(height: 24),
 
-                        // Additional link
+                        // Back to Login link
                         TextButton(
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const ForgotPasswordScreen(),
-                              ),
-                            );
+                            Navigator.pop(context);
                           },
-                          child: const Text(
-                            'Forgot your password?',
-                            style: TextStyle(
-                              color: Color(0xFF6d4c7d),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Register section
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Don't have an account? ",
-                              style: TextStyle(
-                                color: Colors.black.withOpacity(0.5),
-                                fontSize: 14,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.arrow_back,
+                                color: Color(0xFF6d4c7d),
+                                size: 18,
                               ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const RegistrationScreen(),
-                                  ),
-                                );
-                              },
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: const Text(
-                                'Register',
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Back to Login',
                                 style: TextStyle(
                                   color: Color(0xFF6d4c7d),
                                   fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -329,15 +281,30 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
 
-            // Top navigation hint
+            // Top back button
             Positioned(
               top: 24,
               left: 24,
               child: FadeTransition(
                 opacity: _fadeAnimation,
-                child: Row(children: [
-                   
-                  ],
+                child: IconButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: const Icon(
+                    Icons.arrow_back_ios,
+                    color: Color(0xFF6d4c7d),
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: const Color(0xFF6d4c7d).withOpacity(0.2),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -351,11 +318,10 @@ class _LoginScreenState extends State<LoginScreen>
     required TextEditingController controller,
     required String hint,
     required IconData icon,
-    bool isPassword = false,
   }) {
     return TextField(
       controller: controller,
-      obscureText: isPassword && !_isPasswordVisible,
+      keyboardType: TextInputType.emailAddress,
       style: const TextStyle(color: Color(0xFF1a1a2e), fontSize: 16),
       decoration: InputDecoration(
         hintText: hint,
@@ -364,20 +330,6 @@ class _LoginScreenState extends State<LoginScreen>
           fontSize: 15,
         ),
         prefixIcon: Icon(icon, color: const Color(0xFF6d4c7d), size: 22),
-        suffixIcon: isPassword
-            ? IconButton(
-                icon: Icon(
-                  _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                  color: const Color(0xFF6d4c7d),
-                  size: 22,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _isPasswordVisible = !_isPasswordVisible;
-                  });
-                },
-              )
-            : null,
         filled: true,
         fillColor: const Color(0xFF6d4c7d).withOpacity(0.05),
         border: OutlineInputBorder(
