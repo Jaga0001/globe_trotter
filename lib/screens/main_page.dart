@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:globe_trotter/components/create_dialog.dart';
-import 'package:globe_trotter/screens/Iternary_view_screen.dart';
-import 'package:globe_trotter/screens/destination_detail_screen.dart';
+import 'package:globe_trotter/screens/calendar_view.dart';
+import 'package:globe_trotter/screens/profile_screen.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -13,6 +13,59 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   final TextEditingController _searchController = TextEditingController();
   int _selectedIndex = 0;
+  List<Map<String, String>> _filteredDestinations = [];
+
+  // Destinations list
+  late final List<Map<String, String>> _allDestinations = [
+    {
+      "name": "Taj Mahal",
+      "city": "Agra",
+      "state": "Uttar Pradesh",
+      "rating": "4.9",
+      "cover":
+          "https://upload.wikimedia.org/wikipedia/commons/1/1b/Taj_Mahal-08.jpg",
+    },
+    {
+      "name": "Jaipur Palace",
+      "city": "Jaipur",
+      "state": "Rajasthan",
+      "rating": "4.8",
+      "cover":
+          "https://upload.wikimedia.org/wikipedia/commons/3/37/Hawa_Mahal_2011.jpg",
+    },
+    {
+      "name": "Backwaters",
+      "city": "Alleppey",
+      "state": "Kerala",
+      "rating": "4.9",
+      "cover":
+          "https://upload.wikimedia.org/wikipedia/commons/4/4e/Kerala_backwaters%2C_Houseboats%2C_India.jpg",
+    },
+    {
+      "name": "Valley of Flowers",
+      "city": "Chamoli",
+      "state": "Uttarakhand",
+      "rating": "4.7",
+      "cover":
+          "https://upload.wikimedia.org/wikipedia/commons/b/b0/Valley_of_flowers_%2829336158797%29.jpg",
+    },
+    {
+      "name": "Goa Beaches",
+      "city": "Panaji",
+      "state": "Goa",
+      "rating": "4.6",
+      "cover":
+          "https://upload.wikimedia.org/wikipedia/commons/3/3f/Palolem_Beach%2C_south_Goa.jpg",
+    },
+    {
+      "name": "Varanasi Ghats",
+      "city": "Varanasi",
+      "state": "Uttar Pradesh",
+      "rating": "4.8",
+      "cover":
+          "https://upload.wikimedia.org/wikipedia/commons/b/b3/Varanasi_246_view_from_Gay_Ghat_towards_Ganges_river_%2833861353814%29.jpg",
+    },
+  ];
 
   // Updated color scheme - softer purple tones
   static const Color primaryPurple = Color(0xFF8B7B9E);
@@ -21,9 +74,35 @@ class _MainPageState extends State<MainPage> {
   static const Color accentPurple = Color(0xFFADA1BC);
 
   @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+    _filteredDestinations = _allDestinations;
+  }
+
+  @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.toLowerCase().trim();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredDestinations = _allDestinations;
+      } else {
+        _filteredDestinations = _allDestinations
+            .where(
+              (dest) =>
+                  dest['name']!.toLowerCase().contains(query) ||
+                  dest['city']!.toLowerCase().contains(query) ||
+                  dest['state']!.toLowerCase().contains(query),
+            )
+            .toList();
+      }
+    });
   }
 
   @override
@@ -31,6 +110,20 @@ class _MainPageState extends State<MainPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth > 900;
     final contentMaxWidth = isWideScreen ? 1200.0 : screenWidth;
+
+    // Show Calendar View when Explore (index 1) is selected
+    if (_selectedIndex == 1) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F7FA),
+        body: Row(
+          children: [
+            if (isWideScreen) _buildSideNav(),
+            const Expanded(child: CalendarViewScreen()),
+          ],
+        ),
+        floatingActionButton: _buildFAB(),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F7FA),
@@ -79,7 +172,9 @@ class _MainPageState extends State<MainPage> {
                             _buildSearchBar(),
                             const SizedBox(height: 32),
                             _buildSectionHeader(
-                              'Popular Destinations in India',
+                              _searchController.text.isEmpty
+                                  ? 'Popular Destinations in India'
+                                  : 'Search Results',
                               onSeeAll: () {},
                             ),
                             const SizedBox(height: 20),
@@ -256,38 +351,33 @@ class _MainPageState extends State<MainPage> {
             tooltip: 'Notifications',
           ),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: lightPurple,
-              borderRadius: BorderRadius.circular(24),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProfileSettingsPageWeb(
+                  themeColor: primaryPurple,
+                  accentColor: accentPurple,
+                ),
+              ),
             ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: primaryPurple,
-                  child: const Text(
-                    'RD',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Rahul D.',
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundColor: primaryPurple,
+                child: const Text(
+                  'RD',
                   style: TextStyle(
-                    color: darkPurple,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
                   ),
                 ),
-                const SizedBox(width: 4),
-                Icon(Icons.keyboard_arrow_down, color: darkPurple, size: 20),
-              ],
+              ),
             ),
           ),
         ],
@@ -475,57 +565,6 @@ class _MainPageState extends State<MainPage> {
   }
 
   Widget _buildDestinationsGrid(bool isWideScreen) {
-    final destinations = [
-      {
-        "name": "Taj Mahal",
-        "city": "Agra",
-        "state": "Uttar Pradesh",
-        "rating": "4.9",
-        "cover":
-            "https://upload.wikimedia.org/wikipedia/commons/1/1b/Taj_Mahal-08.jpg",
-      },
-      {
-        "name": "Jaipur Palace",
-        "city": "Jaipur",
-        "state": "Rajasthan",
-        "rating": "4.8",
-        "cover":
-            "https://upload.wikimedia.org/wikipedia/commons/3/37/Hawa_Mahal_2011.jpg",
-      },
-      {
-        "name": "Backwaters",
-        "city": "Alleppey",
-        "state": "Kerala",
-        "rating": "4.9",
-        "cover":
-            "https://upload.wikimedia.org/wikipedia/commons/4/4e/Kerala_backwaters%2C_Houseboats%2C_India.jpg",
-      },
-      {
-        "name": "Valley of Flowers",
-        "city": "Chamoli",
-        "state": "Uttarakhand",
-        "rating": "4.7",
-        "cover":
-            "https://upload.wikimedia.org/wikipedia/commons/b/b0/Valley_of_flowers_%2829336158797%29.jpg",
-      },
-      {
-        "name": "Goa Beaches",
-        "city": "Panaji",
-        "state": "Goa",
-        "rating": "4.6",
-        "cover":
-            "https://upload.wikimedia.org/wikipedia/commons/3/3f/Palolem_Beach%2C_south_Goa.jpg",
-      },
-      {
-        "name": "Varanasi Ghats",
-        "city": "Varanasi",
-        "state": "Uttar Pradesh",
-        "rating": "4.8",
-        "cover":
-            "https://upload.wikimedia.org/wikipedia/commons/b/b3/Varanasi_246_view_from_Gay_Ghat_towards_Ganges_river_%2833861353814%29.jpg",
-      },
-    ];
-
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -535,9 +574,9 @@ class _MainPageState extends State<MainPage> {
         mainAxisSpacing: 20,
         childAspectRatio: isWideScreen ? 0.85 : 0.8,
       ),
-      itemCount: destinations.length,
+      itemCount: _filteredDestinations.length,
       itemBuilder: (context, index) {
-        final dest = destinations[index];
+        final dest = _filteredDestinations[index];
         return _buildDestinationCard(
           dest['name']!,
           dest['city']!,
@@ -556,173 +595,157 @@ class _MainPageState extends State<MainPage> {
     String rating,
     String cover,
   ) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DestinationDetailScreen(
-              name: name,
-              city: city,
-              state: state,
-              rating: rating,
-              coverImage: cover,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [lightPurple, accentPurple.withOpacity(0.3)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
+              ),
+              child: Stack(
+                children: [
+                  Center(child: Image.network(cover, fit: BoxFit.cover)),
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 14,
+                            color: Colors.amber,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            rating,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: darkPurple,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.favorite_border_rounded,
+                        size: 18,
+                        color: primaryPurple,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 3,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [lightPurple, accentPurple.withOpacity(0.3)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    Center(child: Image.network(cover, fit: BoxFit.cover)),
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: Colors.black87,
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 14,
-                              color: Colors.amber,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              rating,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: darkPurple,
-                              ),
-                            ),
-                          ],
-                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: 14,
+                            color: Colors.grey.shade500,
+                          ),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(
+                              '$city, $state',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
-                          shape: BoxShape.circle,
+                          color: lightPurple,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Icon(
-                          Icons.favorite_border_rounded,
-                          size: 18,
-                          color: primaryPurple,
+                        child: const Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 16,
+                          color: darkPurple,
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: Colors.black87,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              size: 14,
-                              color: Colors.grey.shade500,
-                            ),
-                            const SizedBox(width: 2),
-                            Expanded(
-                              child: Text(
-                                '$city, $state',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: lightPurple,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 16,
-                            color: darkPurple,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1186,37 +1209,91 @@ class _MainPageState extends State<MainPage> {
   }
 
   Widget _buildFAB() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        // AI Chatbot FAB
-        const SizedBox(height: 16),
-        // Plan Trip FAB
-        FloatingActionButton.extended(
-          onPressed: () async {
-            final result = await showCreateTripDialog(context);
-            if (result != null) {
-              // Handle created trip
-              print('Created trip: ${result.tripName}');
-              print('Place: ${result.place}');
-              print('Activities: ${result.activities.length}');
-              print(
-                'Total Budget: ${result.activities.fold(0.0, (sum, a) => sum + a.budget)}',
-              );
-            }
-          },
-          backgroundColor: primaryPurple,
-          elevation: 4,
-          hoverElevation: 8,
-          heroTag: 'plan_trip',
-          icon: const Icon(Icons.add_rounded, color: Colors.white),
-          label: const Text(
-            'Plan New Trip',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-          ),
-        ),
-      ],
+    return FloatingActionButton.extended(
+      onPressed: () async {
+        final result = await showCreateTripDialog(context);
+        if (result != null) {
+          // Show success snackbar
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.check_circle_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Trip Created Successfully!',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            '${result.tripName}${result.activities.isNotEmpty ? ' • ${result.activities.length} activities' : ''}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: primaryPurple,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.all(16),
+                duration: const Duration(seconds: 4),
+                action: SnackBarAction(
+                  label: 'VIEW',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    // Navigate to trip details or calendar
+                    setState(
+                      () => _selectedIndex = 1,
+                    ); // Go to Explore/Calendar
+                  },
+                ),
+              ),
+            );
+          }
+
+          // Handle created trip data
+          print('Created trip: ${result.tripName}');
+          print('Place: ${result.place}');
+          print('Activities: ${result.activities.length}');
+          print(
+            'Total Budget: ${result.activities.fold(0.0, (sum, a) => sum + a.budget)}',
+          );
+        }
+      },
+      backgroundColor: primaryPurple,
+      elevation: 4,
+      hoverElevation: 8,
+      icon: const Icon(Icons.add_rounded, color: Colors.white),
+      label: const Text(
+        'Plan New Trip',
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:globe_trotter/screens/admin_page.dart';
 import 'package:globe_trotter/screens/forgotpassword_screen.dart';
 import 'package:globe_trotter/screens/main_page.dart';
 import 'package:globe_trotter/screens/register_screen.dart';
@@ -70,10 +71,17 @@ class _LoginScreenState extends State<LoginScreen>
     if (username.isEmpty || password.isEmpty) {
       _showRightPopup('Please fill in all fields', isError: true);
     } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const MainPage()),
-      );
+      if (username == 'admin') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminPage()),
+        );
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MainPage()),
+        );
+      }
     }
   }
 

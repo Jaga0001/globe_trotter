@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:globe_trotter/screens/login_screen.dart';
 
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
