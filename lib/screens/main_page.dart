@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:globe_trotter/components/create_dialog.dart';
+import 'package:globe_trotter/screens/calendar_view.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -29,6 +30,20 @@ class _MainPageState extends State<MainPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth > 900;
     final contentMaxWidth = isWideScreen ? 1200.0 : screenWidth;
+
+    // Show Calendar View when Explore (index 1) is selected
+    if (_selectedIndex == 1) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F7FA),
+        body: Row(
+          children: [
+            if (isWideScreen) _buildSideNav(),
+            const Expanded(child: CalendarViewScreen()),
+          ],
+        ),
+        floatingActionButton: _buildFAB(),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F7FA),
@@ -584,13 +599,7 @@ class _MainPageState extends State<MainPage> {
               ),
               child: Stack(
                 children: [
-                  Center(
-                    child: Image.network(
-                      cover,
-                      
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                  Center(child: Image.network(cover, fit: BoxFit.cover)),
                   Positioned(
                     top: 12,
                     right: 12,
