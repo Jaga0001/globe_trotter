@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:globe_trotter/components/create_dialog.dart';
+import 'package:globe_trotter/screens/Iternary_view_screen.dart';
+import 'package:globe_trotter/screens/destination_detail_screen.dart';
 import 'package:globe_trotter/screens/calendar_view.dart';
 import 'package:globe_trotter/screens/profile_screen.dart';
 
@@ -15,7 +17,12 @@ class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
   List<Map<String, String>> _filteredDestinations = [];
 
-  // Destinations list
+  // Updated color scheme - softer purple tones
+  static const Color primaryPurple = Color(0xFF8B7B9E);
+  static const Color darkPurple = Colors.deepPurple;
+  static const Color lightPurple = Color(0xFFF0ECF4);
+  static const Color accentPurple = Color(0xFFADA1BC);
+
   late final List<Map<String, String>> _allDestinations = [
     {
       "name": "Taj Mahal",
@@ -66,12 +73,6 @@ class _MainPageState extends State<MainPage> {
           "https://upload.wikimedia.org/wikipedia/commons/b/b3/Varanasi_246_view_from_Gay_Ghat_towards_Ganges_river_%2833861353814%29.jpg",
     },
   ];
-
-  // Updated color scheme - softer purple tones
-  static const Color primaryPurple = Color(0xFF8B7B9E);
-  static const Color darkPurple = Colors.deepPurple;
-  static const Color lightPurple = Color(0xFFF0ECF4);
-  static const Color accentPurple = Color(0xFFADA1BC);
 
   @override
   void initState() {
@@ -364,19 +365,33 @@ class _MainPageState extends State<MainPage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
+                color: lightPurple,
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: CircleAvatar(
-                radius: 16,
-                backgroundColor: primaryPurple,
-                child: const Text(
-                  'RD',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: primaryPurple,
+                    child: const Text(
+                      'RD',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Rahul D.',
+                    style: TextStyle(
+                      color: darkPurple,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -470,7 +485,7 @@ class _MainPageState extends State<MainPage> {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () => setState(() => _selectedIndex = 1),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: darkPurple,
@@ -550,14 +565,10 @@ class _MainPageState extends State<MainPage> {
         ),
         TextButton.icon(
           onPressed: onSeeAll,
-          icon: const Text(
+          icon: const Icon(Icons.arrow_forward, color: primaryPurple, size: 18),
+          label: const Text(
             'See All',
             style: TextStyle(color: primaryPurple, fontWeight: FontWeight.w600),
-          ),
-          label: const Icon(
-            Icons.arrow_forward,
-            color: primaryPurple,
-            size: 18,
           ),
         ),
       ],
@@ -595,157 +606,173 @@ class _MainPageState extends State<MainPage> {
     String rating,
     String cover,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 3,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [lightPurple, accentPurple.withOpacity(0.3)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-              ),
-              child: Stack(
-                children: [
-                  Center(child: Image.network(cover, fit: BoxFit.cover)),
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            size: 14,
-                            color: Colors.amber,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            rating,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: darkPurple,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.favorite_border_rounded,
-                        size: 18,
-                        color: primaryPurple,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DestinationDetailScreen(
+              name: name,
+              city: city,
+              state: state,
+              rating: rating,
+              coverImage: cover,
             ),
           ),
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: Colors.black87,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            size: 14,
-                            color: Colors.grey.shade500,
-                          ),
-                          const SizedBox(width: 2),
-                          Expanded(
-                            child: Text(
-                              '$city, $state',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [lightPurple, accentPurple.withOpacity(0.3)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Container(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    Center(child: Image.network(cover, fit: BoxFit.cover)),
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              size: 14,
+                              color: Colors.amber,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              rating,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: darkPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: lightPurple,
-                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white.withOpacity(0.9),
+                          shape: BoxShape.circle,
                         ),
-                        child: const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 16,
-                          color: darkPurple,
+                        child: Icon(
+                          Icons.favorite_border_rounded,
+                          size: 18,
+                          color: primaryPurple,
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                            const SizedBox(width: 2),
+                            Expanded(
+                              child: Text(
+                                '$city, $state',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: lightPurple,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 16,
+                            color: darkPurple,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -943,7 +970,7 @@ class _MainPageState extends State<MainPage> {
       date: trip['date']!,
       days: trip['days']!,
       status: trip['status']!,
-      imageUrl: trip['image']!, // Add image URL
+      imageUrl: trip['image']!,
       itinerary: [
         DayItinerary(
           dayNumber: 1,
@@ -1041,7 +1068,6 @@ class _MainPageState extends State<MainPage> {
               ),
               child: Stack(
                 children: [
-                  // Image with proper fit
                   Image.network(
                     imageUrl,
                     width: double.infinity,
@@ -1075,7 +1101,6 @@ class _MainPageState extends State<MainPage> {
                       );
                     },
                   ),
-                  // Gradient overlay for better text visibility
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -1213,7 +1238,6 @@ class _MainPageState extends State<MainPage> {
       onPressed: () async {
         final result = await showCreateTripDialog(context);
         if (result != null) {
-          // Show success snackbar
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -1266,24 +1290,11 @@ class _MainPageState extends State<MainPage> {
                 action: SnackBarAction(
                   label: 'VIEW',
                   textColor: Colors.white,
-                  onPressed: () {
-                    // Navigate to trip details or calendar
-                    setState(
-                      () => _selectedIndex = 1,
-                    ); // Go to Explore/Calendar
-                  },
+                  onPressed: () => setState(() => _selectedIndex = 1),
                 ),
               ),
             );
           }
-
-          // Handle created trip data
-          print('Created trip: ${result.tripName}');
-          print('Place: ${result.place}');
-          print('Activities: ${result.activities.length}');
-          print(
-            'Total Budget: ${result.activities.fold(0.0, (sum, a) => sum + a.budget)}',
-          );
         }
       },
       backgroundColor: primaryPurple,
