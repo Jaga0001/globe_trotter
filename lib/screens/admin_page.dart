@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:globe_trotter/screens/admin_trips_page.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -96,6 +97,8 @@ class _AdminPageState extends State<AdminPage> {
     ],
   };
 
+  int _selectedNavIndex = 0;
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -106,53 +109,108 @@ class _AdminPageState extends State<AdminPage> {
       body: Row(
         children: [
           if (isWideScreen) _buildSideNav(),
-          Expanded(
+          Expanded(child: _buildPageContent(isWideScreen)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageContent(bool isWideScreen) {
+    switch (_selectedNavIndex) {
+      case 0:
+        return _buildDashboardContent(isWideScreen);
+      case 1:
+        return AdminTripsContent(
+          onNavigate: (index) => setState(() => _selectedNavIndex = index),
+        );
+      case 2:
+        return _buildPlaceholderPage('Users', Icons.people_rounded);
+      case 3:
+        return _buildPlaceholderPage('Destinations', Icons.location_on_rounded);
+      case 4:
+        return _buildPlaceholderPage('Analytics', Icons.trending_up_rounded);
+      case 5:
+        return _buildPlaceholderPage('Settings', Icons.settings_rounded);
+      default:
+        return _buildDashboardContent(isWideScreen);
+    }
+  }
+
+  Widget _buildPlaceholderPage(String title, IconData icon) {
+    return Column(
+      children: [
+        _buildTopBar(false),
+        Expanded(
+          child: Center(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildTopBar(isWideScreen),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isWideScreen ? 40.0 : 20.0,
-                        vertical: 24.0,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildWelcomeHeader(),
-                          const SizedBox(height: 32),
-                          _buildKPICards(isWideScreen),
-                          const SizedBox(height: 40),
-                          if (isWideScreen)
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(flex: 2, child: _buildTripChart()),
-                                const SizedBox(width: 24),
-                                Expanded(child: _buildRevenueMetrics()),
-                              ],
-                            )
-                          else ...[
-                            _buildTripChart(),
-                            const SizedBox(height: 24),
-                            _buildRevenueMetrics(),
-                          ],
-                          const SizedBox(height: 40),
-                          _buildTopDestinations(),
-                          const SizedBox(height: 40),
-                          _buildRecentTripsSection(),
-                          const SizedBox(height: 40),
-                        ],
-                      ),
-                    ),
+                Icon(icon, size: 64, color: primaryPurple.withOpacity(0.5)),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: darkPurple,
                   ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Coming Soon',
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDashboardContent(bool isWideScreen) {
+    return Column(
+      children: [
+        _buildTopBar(isWideScreen),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isWideScreen ? 40.0 : 20.0,
+                vertical: 24.0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildWelcomeHeader(),
+                  const SizedBox(height: 32),
+                  _buildKPICards(isWideScreen),
+                  const SizedBox(height: 40),
+                  if (isWideScreen)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 2, child: _buildTripChart()),
+                        const SizedBox(width: 24),
+                        Expanded(child: _buildRevenueMetrics()),
+                      ],
+                    )
+                  else ...[
+                    _buildTripChart(),
+                    const SizedBox(height: 24),
+                    _buildRevenueMetrics(),
+                  ],
+                  const SizedBox(height: 40),
+                  _buildTopDestinations(),
+                  const SizedBox(height: 40),
+                  _buildRecentTripsSection(),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -216,7 +274,7 @@ class _AdminPageState extends State<AdminPage> {
   }
 
   Widget _buildNavItem(IconData icon, String label, int index) {
-    final isSelected = index == 0; // Dashboard is selected by default
+    final isSelected = index == _selectedNavIndex;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Material(
@@ -224,7 +282,7 @@ class _AdminPageState extends State<AdminPage> {
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () {},
+          onTap: () => setState(() => _selectedNavIndex = index),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
@@ -795,7 +853,7 @@ class _AdminPageState extends State<AdminPage> {
                 ),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () => setState(() => _selectedNavIndex = 1),
                 child: const Text(
                   'View All',
                   style: TextStyle(
