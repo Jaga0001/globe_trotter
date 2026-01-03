@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:globe_trotter/components/section_dialog.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -980,7 +981,13 @@ class _MainPageState extends State<MainPage> {
 
   Widget _buildFAB() {
     return FloatingActionButton.extended(
-      onPressed: () {},
+      onPressed: () async {
+    final sections = await showActivityDialog(context);
+    if (sections != null) {
+      // Handle saved sections
+      print('Saved ${sections.length} sections');
+    }
+  },
       backgroundColor: primaryPurple,
       elevation: 4,
       hoverElevation: 8,
