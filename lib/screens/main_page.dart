@@ -474,50 +474,55 @@ class _MainPageState extends State<MainPage> {
 
   Widget _buildDestinationsGrid(bool isWideScreen) {
     final destinations = [
-  {
-    "name": "Taj Mahal",
-    "city": "Agra",
-    "state": "Uttar Pradesh",
-    "rating": "4.9",
-    "cover": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Taj_Mahal-08.jpg"
-  },
-  {
-    "name": "Jaipur Palace",
-    "city": "Jaipur",
-    "state": "Rajasthan",
-    "rating": "4.8",
-    "cover": "https://upload.wikimedia.org/wikipedia/commons/3/37/Hawa_Mahal_2011.jpg"
-  },
-  {
-    "name": "Backwaters",
-    "city": "Alleppey",
-    "state": "Kerala",
-    "rating": "4.9",
-    "cover": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Kerala_backwaters%2C_Houseboats%2C_India.jpg"
-  },
-  {
-    "name": "Valley of Flowers",
-    "city": "Chamoli",
-    "state": "Uttarakhand",
-    "rating": "4.7",
-    "cover": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Valley_of_flowers_%2829336158797%29.jpg"
-  },
-  {
-    "name": "Goa Beaches",
-    "city": "Panaji",
-    "state": "Goa",
-    "rating": "4.6",
-    "cover": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Palolem_Beach%2C_south_Goa.jpg"
-  },
-  {
-    "name": "Varanasi Ghats",
-    "city": "Varanasi",
-    "state": "Uttar Pradesh",
-    "rating": "4.8",
-    "cover": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Varanasi_246_view_from_Gay_Ghat_towards_Ganges_river_%2833861353814%29.jpg"
-  }
-]
-;
+      {
+        "name": "Taj Mahal",
+        "city": "Agra",
+        "state": "Uttar Pradesh",
+        "rating": "4.9",
+        "cover":
+            "https://upload.wikimedia.org/wikipedia/commons/1/1b/Taj_Mahal-08.jpg",
+      },
+      {
+        "name": "Jaipur Palace",
+        "city": "Jaipur",
+        "state": "Rajasthan",
+        "rating": "4.8",
+        "cover":
+            "https://upload.wikimedia.org/wikipedia/commons/3/37/Hawa_Mahal_2011.jpg",
+      },
+      {
+        "name": "Backwaters",
+        "city": "Alleppey",
+        "state": "Kerala",
+        "rating": "4.9",
+        "cover":
+            "https://upload.wikimedia.org/wikipedia/commons/4/4e/Kerala_backwaters%2C_Houseboats%2C_India.jpg",
+      },
+      {
+        "name": "Valley of Flowers",
+        "city": "Chamoli",
+        "state": "Uttarakhand",
+        "rating": "4.7",
+        "cover":
+            "https://upload.wikimedia.org/wikipedia/commons/b/b0/Valley_of_flowers_%2829336158797%29.jpg",
+      },
+      {
+        "name": "Goa Beaches",
+        "city": "Panaji",
+        "state": "Goa",
+        "rating": "4.6",
+        "cover":
+            "https://upload.wikimedia.org/wikipedia/commons/3/3f/Palolem_Beach%2C_south_Goa.jpg",
+      },
+      {
+        "name": "Varanasi Ghats",
+        "city": "Varanasi",
+        "state": "Uttar Pradesh",
+        "rating": "4.8",
+        "cover":
+            "https://upload.wikimedia.org/wikipedia/commons/b/b3/Varanasi_246_view_from_Gay_Ghat_towards_Ganges_river_%2833861353814%29.jpg",
+      },
+    ];
 
     return GridView.builder(
       shrinkWrap: true,
@@ -536,6 +541,7 @@ class _MainPageState extends State<MainPage> {
           dest['city']!,
           dest['state']!,
           dest['rating']!,
+          dest['cover']!,
         );
       },
     );
@@ -546,6 +552,7 @@ class _MainPageState extends State<MainPage> {
     String city,
     String state,
     String rating,
+    String cover,
   ) {
     return Container(
       decoration: BoxDecoration(
@@ -578,10 +585,10 @@ class _MainPageState extends State<MainPage> {
               child: Stack(
                 children: [
                   Center(
-                    child: Icon(
-                      Icons.landscape_rounded,
-                      size: 48,
-                      color: primaryPurple.withOpacity(0.5),
+                    child: Image.network(
+                      cover,
+                      
+                      fit: BoxFit.cover,
                     ),
                   ),
                   Positioned(
@@ -983,16 +990,15 @@ class _MainPageState extends State<MainPage> {
     return FloatingActionButton.extended(
       onPressed: () async {
         final result = await showCreateTripDialog(context);
-        if (!mounted || result == null) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Trip: ${result.tripName.isEmpty ? '(unnamed)' : result.tripName} • ${result.place.isEmpty ? '(no place)' : result.place}',
-            ),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        if (result != null) {
+          // Handle created trip
+          print('Created trip: ${result.tripName}');
+          print('Place: ${result.place}');
+          print('Activities: ${result.activities.length}');
+          print(
+            'Total Budget: ${result.activities.fold(0.0, (sum, a) => sum + a.budget)}',
+          );
+        }
       },
       backgroundColor: primaryPurple,
       elevation: 4,

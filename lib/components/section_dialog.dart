@@ -96,23 +96,43 @@ class PredefinedActivity {
   });
 }
 
-// Function to show the dialog
+// Function to show the dialog - updated with trip info parameters
 Future<List<TripActivity>?> showActivityDialog(
   BuildContext context, {
   List<TripActivity>? existingActivities,
+  String? tripName,
+  DateTime? startDate,
+  DateTime? endDate,
+  int members = 1,
 }) {
   return showDialog<List<TripActivity>>(
     context: context,
     barrierDismissible: false,
-    builder: (context) =>
-        ActivityDialog(existingActivities: existingActivities),
+    builder: (context) => ActivityDialog(
+      existingActivities: existingActivities,
+      tripName: tripName,
+      startDate: startDate,
+      endDate: endDate,
+      members: members,
+    ),
   );
 }
 
 class ActivityDialog extends StatefulWidget {
   final List<TripActivity>? existingActivities;
+  final String? tripName;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final int members;
 
-  const ActivityDialog({super.key, this.existingActivities});
+  const ActivityDialog({
+    super.key,
+    this.existingActivities,
+    this.tripName,
+    this.startDate,
+    this.endDate,
+    this.members = 1,
+  });
 
   @override
   State<ActivityDialog> createState() => _ActivityDialogState();
@@ -128,6 +148,35 @@ class _ActivityDialogState extends State<ActivityDialog> {
   }
 
   double get _totalBudget => _activities.fold(0, (sum, a) => sum + a.budget);
+
+  String get _tripName => widget.tripName ?? 'New Trip';
+
+  String get _dateRange {
+    if (widget.startDate != null && widget.endDate != null) {
+      return '${_formatDateShort(widget.startDate!)} - ${_formatDateShort(widget.endDate!)}';
+    } else if (widget.startDate != null) {
+      return 'From ${_formatDateShort(widget.startDate!)}';
+    }
+    return 'Dates not set';
+  }
+
+  String _formatDateShort(DateTime dt) {
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -273,9 +322,9 @@ class _ActivityDialogState extends State<ActivityDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Rajasthan Heritage Tour',
-                  style: TextStyle(
+                Text(
+                  _tripName,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -283,7 +332,7 @@ class _ActivityDialogState extends State<ActivityDialog> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Mar 15 - Mar 22, 2024 • 4 Travelers',
+                  '$_dateRange • ${widget.members} Traveler${widget.members > 1 ? 's' : ''}',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.white.withOpacity(0.9),
@@ -313,6 +362,10 @@ class _ActivityDialogState extends State<ActivityDialog> {
   }
 
   Widget _buildBudgetSummary() {
+    final perPerson = widget.members > 0
+        ? _totalBudget / widget.members
+        : _totalBudget;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -363,7 +416,7 @@ class _ActivityDialogState extends State<ActivityDialog> {
                 style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
               ),
               Text(
-                '₹${(_totalBudget / 4).toStringAsFixed(0)}',
+                '₹${perPerson.toStringAsFixed(0)}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -788,8 +841,12 @@ class _ActivityDialogState extends State<ActivityDialog> {
     final budgetController = TextEditingController(
       text: predefined.estimatedBudget.toStringAsFixed(0),
     );
-    DateTime startDate = DateTime.now().add(const Duration(days: 1, hours: 9));
-    DateTime endDate = DateTime.now().add(const Duration(days: 1, hours: 12));
+    DateTime startDate =
+        widget.startDate ??
+        DateTime.now().add(const Duration(days: 1, hours: 9));
+    DateTime endDate =
+        widget.startDate?.add(const Duration(hours: 3)) ??
+        DateTime.now().add(const Duration(days: 1, hours: 12));
 
     showDialog(
       context: context,
@@ -887,9 +944,11 @@ class _ActivityDialogState extends State<ActivityDialog> {
     );
     DateTime startDate =
         existing?.startDateTime ??
+        widget.startDate ??
         DateTime.now().add(const Duration(days: 1, hours: 9));
     DateTime endDate =
         existing?.endDateTime ??
+        widget.startDate?.add(const Duration(hours: 3)) ??
         DateTime.now().add(const Duration(days: 1, hours: 12));
 
     showDialog(

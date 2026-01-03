@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:globe_trotter/components/section_dialog.dart';
 
 class CreateTripResult {
   final String tripName;
@@ -7,6 +8,7 @@ class CreateTripResult {
   final int? members;
   final DateTime? startDate;
   final DateTime? endDate;
+  final List<TripActivity> activities;
 
   const CreateTripResult({
     required this.tripName,
@@ -14,6 +16,7 @@ class CreateTripResult {
     required this.members,
     required this.startDate,
     required this.endDate,
+    required this.activities,
   });
 }
 
@@ -53,6 +56,7 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
 
   DateTime? _startDate;
   DateTime? _endDate;
+  List<TripActivity> _activities = [];
 
   @override
   void dispose() {
@@ -82,6 +86,15 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
       initialDate: _startDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: _accent,
+            onPrimary: Colors.white,
+          ),
+        ),
+        child: child!,
+      ),
     );
     if (picked == null) return;
     setState(() {
@@ -101,6 +114,15 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
       initialDate: _endDate ?? base,
       firstDate: base,
       lastDate: DateTime(2100),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: _accent,
+            onPrimary: Colors.white,
+          ),
+        ),
+        child: child!,
+      ),
     );
     if (picked == null) return;
     setState(() {
@@ -109,7 +131,55 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
     });
   }
 
+  // Add validation check
+  bool get _canAddActivities {
+    return _tripNameController.text.trim().isNotEmpty &&
+        _startDate != null &&
+        _endDate != null;
+  }
+
+  Future<void> _openActivityDialog() async {
+    // Check if required fields are filled
+    if (!_canAddActivities) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Please fill trip name, start date and end date first',
+          ),
+          backgroundColor: Colors.orange.shade600,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final result = await showActivityDialog(
+      context,
+      existingActivities: _activities.isNotEmpty ? _activities : null,
+      tripName: _tripNameController.text.trim(),
+      startDate: _startDate,
+      endDate: _endDate,
+      members: _parseMembers() ?? 1,
+    );
+    if (result != null) {
+      setState(() {
+        _activities = result;
+      });
+    }
+  }
+
   void _submit() {
+    if (_tripNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please enter a trip name'),
+          backgroundColor: Colors.red.shade400,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     Navigator.of(context).pop(
       CreateTripResult(
         tripName: _tripNameController.text.trim(),
@@ -117,9 +187,12 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
         members: _parseMembers(),
         startDate: _startDate,
         endDate: _endDate,
+        activities: _activities,
       ),
     );
   }
+
+  double get _totalBudget => _activities.fold(0, (sum, a) => sum + a.budget);
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +200,7 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
     final maxWidth = size.width >= 900
         ? 820.0
         : (size.width - 32).clamp(320.0, 820.0);
-    final maxHeight = (size.height * 0.82).clamp(420.0, 760.0);
+    final maxHeight = (size.height * 0.88).clamp(420.0, 800.0);
 
     return Dialog(
       insetPadding: const EdgeInsets.all(16),
@@ -155,6 +228,8 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
                       _buildHeaderRow(),
                       const SizedBox(height: 10),
                       _formCard(),
+                      const SizedBox(height: 16),
+                      _buildActivitiesSection(),
                       const SizedBox(height: 16),
                       _actionsRow(),
                     ],
@@ -281,6 +356,175 @@ class _CreateTripDialogState extends State<_CreateTripDialog> {
             controller: _endDateController,
             onPick: _pickEndDate,
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivitiesSection() {
+    final isEnabled = _canAddActivities;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _divider, width: 1),
+        color: isEnabled ? const Color(0xFFF8F7FA) : Colors.grey.shade100,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isEnabled
+                      ? _accent.withOpacity(0.15)
+                      : Colors.grey.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.event_note_rounded,
+                  color: isEnabled ? _accent : Colors.grey,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Activities & Itinerary',
+                      style: TextStyle(
+                        color: isEnabled ? _textPrimary : Colors.grey,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      !isEnabled
+                          ? 'Fill trip details above to add activities'
+                          : _activities.isEmpty
+                          ? 'No activities added yet'
+                          : '${_activities.length} activities • ₹${_totalBudget.toStringAsFixed(0)} total',
+                      style: TextStyle(
+                        color: isEnabled
+                            ? _textSecondary
+                            : Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: isEnabled ? _openActivityDialog : null,
+                icon: Icon(
+                  _activities.isEmpty ? Icons.add_rounded : Icons.edit_rounded,
+                  size: 16,
+                ),
+                label: Text(_activities.isEmpty ? 'Add' : 'Edit'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isEnabled ? _accent : Colors.grey.shade400,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.grey.shade300,
+                  disabledForegroundColor: Colors.grey.shade500,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ],
+          ),
+          if (_activities.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 85,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _activities.length > 5 ? 5 : _activities.length,
+                itemBuilder: (context, index) {
+                  if (index == 4 && _activities.length > 5) {
+                    return _buildMoreActivitiesCard(_activities.length - 4);
+                  }
+                  return _buildActivityPreviewCard(_activities[index]);
+                },
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivityPreviewCard(TripActivity activity) {
+    return Container(
+      width: 100,
+      margin: const EdgeInsets.only(right: 10),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: activity.color.withOpacity(0.3)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: activity.color.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(activity.icon, color: activity.color, size: 18),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            activity.title,
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            '₹${activity.budget.toStringAsFixed(0)}',
+            style: TextStyle(fontSize: 9, color: Colors.grey.shade600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMoreActivitiesCard(int count) {
+    return Container(
+      width: 80,
+      margin: const EdgeInsets.only(right: 10),
+      decoration: BoxDecoration(
+        color: _accent.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _accent.withOpacity(0.3)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '+$count',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: _accent,
+            ),
+          ),
+          const Text('more', style: TextStyle(fontSize: 11, color: _accent)),
         ],
       ),
     );
