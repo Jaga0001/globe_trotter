@@ -1026,7 +1026,71 @@ class _MainPageState extends State<MainPage> {
       onPressed: () async {
         final result = await showCreateTripDialog(context);
         if (result != null) {
-          // Handle created trip
+          // Show success snackbar
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.check_circle_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Trip Created Successfully!',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            '${result.tripName}${result.activities.isNotEmpty ? ' • ${result.activities.length} activities' : ''}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: primaryPurple,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.all(16),
+                duration: const Duration(seconds: 4),
+                action: SnackBarAction(
+                  label: 'VIEW',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    // Navigate to trip details or calendar
+                    setState(
+                      () => _selectedIndex = 1,
+                    ); // Go to Explore/Calendar
+                  },
+                ),
+              ),
+            );
+          }
+
+          // Handle created trip data
           print('Created trip: ${result.tripName}');
           print('Place: ${result.place}');
           print('Activities: ${result.activities.length}');
