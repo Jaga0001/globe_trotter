@@ -87,7 +87,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     Overlay.of(context).insert(_overlayEntry!);
     _popupAnimationController!.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 2), () {
       _removePopup();
     });
   }

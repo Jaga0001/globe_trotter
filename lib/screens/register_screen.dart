@@ -24,6 +24,9 @@ class _RegistrationScreenState extends State<RegistrationScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
+  OverlayEntry? _overlayEntry;
+  AnimationController? _popupAnimationController;
+
   @override
   void initState() {
     super.initState();
@@ -62,21 +65,44 @@ class _RegistrationScreenState extends State<RegistrationScreen>
     _additionalInfoController.dispose();
     _fadeController.dispose();
     _slideController.dispose();
+    _removePopup();
     super.dispose();
   }
 
-  void _showSnackBar(String message, {required bool isError}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError
-            ? const Color(0xFFd32f2f)
-            : const Color(0xFF6d4c7d),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(20),
+  void _showRightPopup(String message, {required bool isError}) {
+    _removePopup();
+
+    _popupAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => _RightFadePopup(
+        message: message,
+        isError: isError,
+        animationController: _popupAnimationController!,
+        onDismiss: _removePopup,
       ),
     );
+
+    Overlay.of(context).insert(_overlayEntry!);
+    _popupAnimationController!.forward();
+
+    Future.delayed(const Duration(seconds: 2), () {
+      _removePopup();
+    });
+  }
+
+  void _removePopup() {
+    if (_popupAnimationController != null) {
+      _popupAnimationController!.reverse().then((_) {
+        _overlayEntry?.remove();
+        _overlayEntry = null;
+        _popupAnimationController?.dispose();
+        _popupAnimationController = null;
+      });
+    }
   }
 
   @override
@@ -303,20 +329,36 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                             child: ElevatedButton(
                               onPressed: () {
                                 if (_formKey.currentState!.validate()) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => UsernameScreen(
-                                        firstName: _firstNameController.text,
-                                        lastName: _lastNameController.text,
-                                        email: _emailController.text,
-                                        phone: _phoneController.text,
-                                        city: _cityController.text,
-                                        country: _countryController.text,
-                                        additionalInfo:
-                                            _additionalInfoController.text,
-                                      ),
-                                    ),
+                                  _showRightPopup(
+                                    'Account created successfully!',
+                                    isError: false,
+                                  );
+
+                                  Future.delayed(
+                                    const Duration(seconds: 2),
+                                    () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => UsernameScreen(
+                                            firstName:
+                                                _firstNameController.text,
+                                            lastName: _lastNameController.text,
+                                            email: _emailController.text,
+                                            phone: _phoneController.text,
+                                            city: _cityController.text,
+                                            country: _countryController.text,
+                                            additionalInfo:
+                                                _additionalInfoController.text,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                } else {
+                                  _showRightPopup(
+                                    'Please fill in all required fields',
+                                    isError: true,
                                   );
                                 }
                               },
@@ -518,6 +560,108 @@ class _RegistrationScreenState extends State<RegistrationScreen>
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,
           vertical: 18,
+        ),
+      ),
+    );
+  }
+}
+
+class _RightFadePopup extends StatelessWidget {
+  final String message;
+  final bool isError;
+  final AnimationController animationController;
+  final VoidCallback onDismiss;
+
+  const _RightFadePopup({
+    required this.message,
+    required this.isError,
+    required this.animationController,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final slideAnimation =
+        Tween<Offset>(begin: const Offset(1.2, 0), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
+    final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: animationController, curve: Curves.easeInOut),
+    );
+
+    return Positioned(
+      top: 24,
+      right: 16,
+      child: SlideTransition(
+        position: slideAnimation,
+        child: FadeTransition(
+          opacity: fadeAnimation,
+          child: SafeArea(
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 280),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: isError
+                      ? const Color(0xFFd32f2f)
+                      : const Color(0xFF6d4c7d),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          (isError
+                                  ? const Color(0xFFd32f2f)
+                                  : const Color(0xFF6d4c7d))
+                              .withOpacity(0.3),
+                      blurRadius: 16,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isError
+                          ? Icons.error_outline
+                          : Icons.check_circle_outline,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Text(
+                        message,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: onDismiss,
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
