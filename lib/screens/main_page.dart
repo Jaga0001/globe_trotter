@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:globe_trotter/components/create_dialog.dart';
+import 'package:globe_trotter/screens/calendar_view.dart';
+import 'package:globe_trotter/screens/profile_screen.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -108,6 +110,20 @@ class _MainPageState extends State<MainPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth > 900;
     final contentMaxWidth = isWideScreen ? 1200.0 : screenWidth;
+
+    // Show Calendar View when Explore (index 1) is selected
+    if (_selectedIndex == 1) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F7FA),
+        body: Row(
+          children: [
+            if (isWideScreen) _buildSideNav(),
+            const Expanded(child: CalendarViewScreen()),
+          ],
+        ),
+        floatingActionButton: _buildFAB(),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F7FA),
@@ -335,38 +351,33 @@ class _MainPageState extends State<MainPage> {
             tooltip: 'Notifications',
           ),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: lightPurple,
-              borderRadius: BorderRadius.circular(24),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProfileSettingsPageWeb(
+                  themeColor: primaryPurple,
+                  accentColor: accentPurple,
+                ),
+              ),
             ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: primaryPurple,
-                  child: const Text(
-                    'RD',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Rahul D.',
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundColor: primaryPurple,
+                child: const Text(
+                  'RD',
                   style: TextStyle(
-                    color: darkPurple,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
                   ),
                 ),
-                const SizedBox(width: 4),
-                Icon(Icons.keyboard_arrow_down, color: darkPurple, size: 20),
-              ],
+              ),
             ),
           ),
         ],
