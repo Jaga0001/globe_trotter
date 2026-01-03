@@ -7,10 +7,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 // Mock data constants
 class MockProfileData {
-  static const String name = 'Alexander Thompson';
-  static const String email = 'alex.thompson@globetrotter.com';
-  static const String phone = '+1 (555) 123-4567';
-  static const String favoriteDestination = 'Santorini, Greece';
+  static const String name = 'Ragul David';
+  static const String email = 'ragul.david@globetrotter.com';
+  static const String phone = '+91 9876543210';
+  static const String favoriteDestination = 'Gujarat, India';
   static const String travelPreference = 'Beach & Adventure';
   static const String passportNumber = 'US87654321';
   static const List<String> mockDestinations = [
