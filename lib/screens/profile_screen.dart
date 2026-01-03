@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:globe_trotter/screens/login_screen.dart';
 
 // Mock data constants
 class MockProfileData {
@@ -537,6 +538,43 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
     );
   }
 
+  void _logout() {
+    AwesomeDialog(
+      context: context,
+      dialogType: DialogType.warning,
+      animType: AnimType.scale,
+      title: 'Logout',
+      titleTextStyle: GoogleFonts.inter(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+      ),
+      desc: 'Are you sure you want to logout from your account?',
+      descTextStyle: GoogleFonts.inter(
+        fontSize: 16,
+        color: Colors.grey.shade600,
+      ),
+      btnCancelText: 'Cancel',
+      btnOkText: 'Logout',
+      btnCancelColor: Colors.grey.shade400,
+      btnOkColor: Colors.orange,
+      buttonsTextStyle: GoogleFonts.inter(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+      ),
+      btnOkOnPress: () async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+          );
+        }
+      },
+      btnCancelOnPress: () {},
+    ).show();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -582,6 +620,41 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
         centerTitle: false,
         elevation: 0,
         toolbarHeight: 80,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 24),
+            child: Align(
+              alignment: Alignment.center,
+              child: ElevatedButton.icon(
+                onPressed: _logout,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.2),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(
+                      color: Colors.white.withOpacity(0.3),
+                      width: 1.5,
+                    ),
+                  ),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.logout_rounded, size: 18),
+                label: Text(
+                  'Logout',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
