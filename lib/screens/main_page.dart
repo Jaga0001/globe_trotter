@@ -825,27 +825,43 @@ class _MainPageState extends State<MainPage> {
     final trips = [
       {
         'name': 'Rajasthan Heritage Tour',
+        'place': 'Jaipur',
         'date': 'Mar 2024',
         'days': '7 days',
         'status': 'Upcoming',
+        'image':
+            'https://upload.wikimedia.org/wikipedia/commons/3/37/Hawa_Mahal_2011.jpg',
+        'members': 4,
       },
       {
         'name': 'Kerala Backwaters',
+        'place': 'Alleppey',
         'date': 'Jan 2024',
         'days': '5 days',
         'status': 'Completed',
+        'image':
+            'https://upload.wikimedia.org/wikipedia/commons/4/4e/Kerala_backwaters%2C_Houseboats%2C_India.jpg',
+        'members': 2,
       },
       {
         'name': 'Himalayan Trek',
+        'place': 'Manali',
         'date': 'Dec 2023',
         'days': '10 days',
         'status': 'Completed',
+        'image':
+            'https://upload.wikimedia.org/wikipedia/commons/b/b0/Valley_of_flowers_%2829336158797%29.jpg',
+        'members': 6,
       },
       {
         'name': 'Goa Beach Vacation',
+        'place': 'Panaji',
         'date': 'Nov 2023',
         'days': '4 days',
         'status': 'Completed',
+        'image':
+            'https://upload.wikimedia.org/wikipedia/commons/3/3f/Palolem_Beach%2C_south_Goa.jpg',
+        'members': 3,
       },
     ];
 
@@ -864,20 +880,27 @@ class _MainPageState extends State<MainPage> {
         return GestureDetector(
           onTap: () => _navigateToItinerary(trip),
           child: _buildTripCard(
-            trip['name']!,
-            trip['date']!,
-            trip['days']!,
-            trip['status']!,
+            trip['name']! as String,
+            trip['place']! as String,
+            trip['date']! as String,
+            trip['days']! as String,
+            trip['status']! as String,
+            trip['image']! as String,
+            int.parse(trip['members'].toString()),
           ),
         );
       },
     );
   }
 
-  void _navigateToItinerary(Map<String, String> trip) {
+  void _navigateToItinerary(Map<String, dynamic> trip) {
     // Create sample itinerary data
     final tripDetails = TripDetails(
       tripName: trip['name']!,
+      place: trip['place']!,
+      members: trip['members'] as int,
+      startDate: DateTime.now().add(const Duration(days: 30)),
+      endDate: DateTime.now().add(const Duration(days: 37)),
       date: trip['date']!,
       days: trip['days']!,
       status: trip['status']!,
@@ -890,18 +913,21 @@ class _MainPageState extends State<MainPage> {
               description:
                   'Visit the ancient temple and participate in morning prayers. Experience the spiritual ambiance and architectural beauty.',
               expense: 500,
+              time: '8:00 AM',
             ),
             Activity(
               name: 'City Tour',
               description:
                   'Explore major landmarks including historical monuments, local markets, and cultural centers with a guided tour.',
               expense: 1200,
+              time: '11:00 AM',
             ),
             Activity(
               name: 'Local Market Shopping',
               description:
                   'Browse through traditional handicrafts, textiles, and souvenirs at the bustling local bazaar.',
               expense: 2000,
+              time: '4:00 PM',
             ),
           ],
         ),
@@ -913,18 +939,21 @@ class _MainPageState extends State<MainPage> {
               description:
                   'Discover the magnificent fort with its impressive architecture, royal chambers, and panoramic city views.',
               expense: 800,
+              time: '9:00 AM',
             ),
             Activity(
               name: 'Traditional Lunch',
               description:
                   'Enjoy authentic local cuisine at a heritage restaurant featuring regional specialties and traditional recipes.',
               expense: 600,
+              time: '1:00 PM',
             ),
             Activity(
               name: 'Evening Cultural Show',
               description:
                   'Watch a mesmerizing performance of traditional dance and music showcasing the region\'s rich cultural heritage.',
               expense: 1500,
+              time: '7:00 PM',
             ),
           ],
         ),
@@ -939,7 +968,15 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Widget _buildTripCard(String name, String date, String days, String status) {
+  Widget _buildTripCard(
+    String name,
+    String place,
+    String date,
+    String days,
+    String status,
+    String imageUrl,
+    int members,
+  ) {
     final isUpcoming = status == 'Upcoming';
     return Container(
       decoration: BoxDecoration(
@@ -960,20 +997,35 @@ class _MainPageState extends State<MainPage> {
             flex: 3,
             child: Container(
               decoration: BoxDecoration(
-                color: isUpcoming
-                    ? primaryPurple.withOpacity(0.1)
-                    : lightPurple,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(16),
                 ),
               ),
               child: Stack(
                 children: [
-                  Center(
-                    child: Icon(
-                      Icons.photo_camera_rounded,
-                      size: 40,
-                      color: primaryPurple.withOpacity(0.4),
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                    child: Image.network(
+                      imageUrl,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: isUpcoming
+                              ? primaryPurple.withOpacity(0.1)
+                              : lightPurple,
+                          child: Center(
+                            child: Icon(
+                              Icons.photo_camera_rounded,
+                              size: 40,
+                              color: primaryPurple.withOpacity(0.4),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                   Positioned(
@@ -1000,6 +1052,35 @@ class _MainPageState extends State<MainPage> {
                       ),
                     ),
                   ),
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.people, size: 12, color: primaryPurple),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$members',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: darkPurple,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1021,6 +1102,24 @@ class _MainPageState extends State<MainPage> {
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 12,
+                        color: Colors.grey.shade500,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        place,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 6),
                   Row(

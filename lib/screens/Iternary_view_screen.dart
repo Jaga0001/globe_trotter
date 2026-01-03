@@ -3,14 +3,16 @@ import 'dart:math' as math;
 
 class Activity {
   final String name;
-  final String? description; // Add description field
+  final String? description;
   final double expense;
+  final String time; // Add time field
   bool isCompleted;
 
   Activity({
     required this.name,
-    this.description, // Add to constructor
+    this.description,
     required this.expense,
+    required this.time, // Add to constructor
     this.isCompleted = false,
   });
 }
@@ -24,13 +26,21 @@ class DayItinerary {
 
 class TripDetails {
   final String tripName;
-  final String date;
+  final String place; // Add place
+  final int members; // Add members count
+  final DateTime startDate; // Add start date
+  final DateTime endDate; // Add end date
+  final String date; // Keep for display
   final String days;
   final String status;
   final List<DayItinerary> itinerary;
 
   TripDetails({
     required this.tripName,
+    required this.place, // Add to constructor
+    required this.members, // Add to constructor
+    required this.startDate, // Add to constructor
+    required this.endDate, // Add to constructor
     required this.date,
     required this.days,
     required this.status,
@@ -145,7 +155,7 @@ class _ItineraryViewScreenState extends State<ItineraryViewScreen>
     final progress = totalCount > 0 ? completedCount / totalCount : 0.0;
 
     return SliverAppBar(
-      expandedHeight: 280,
+      expandedHeight: 320, // Increased height
       floating: false,
       pinned: true,
       backgroundColor: primaryPurple,
@@ -218,7 +228,42 @@ class _ItineraryViewScreenState extends State<ItineraryViewScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
+                  // Add place and members info
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        color: Colors.white.withOpacity(0.9),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        widget.tripDetails.place,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.95),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Icon(
+                        Icons.people,
+                        color: Colors.white.withOpacity(0.9),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${widget.tripDetails.members} Members',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.95),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   Row(
                     children: [
                       _buildHeaderChip(
@@ -579,6 +624,43 @@ class _ItineraryViewScreenState extends State<ItineraryViewScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Time badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: activity.isCompleted
+                            ? Colors.grey[300]
+                            : primaryPurple.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 12,
+                            color: activity.isCompleted
+                                ? Colors.grey[600]
+                                : primaryPurple,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            activity.time,
+                            style: TextStyle(
+                              color: activity.isCompleted
+                                  ? Colors.grey[600]
+                                  : primaryPurple,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                     // Activity name as heading
                     Text(
                       activity.name,
