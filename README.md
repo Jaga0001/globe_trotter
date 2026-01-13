@@ -48,18 +48,6 @@ Globe Trotter is your ultimate travel planning and exploration app, designed to 
    flutter run
    ```
 
-### 🌐 Deploy to GitHub Pages
-
-To create your live demo:
-
-1. Build the web version
-   ```bash
-   flutter build web --base-href "/globe_trotter/"
-   ```
-
-2. Enable GitHub Pages in your repository settings (Settings → Pages → Deploy from branch → gh-pages)
-
-3. Deploy using GitHub Actions or manually push the `build/web` folder to `gh-pages` branch
 
 ## 📂 Project Structure
 
