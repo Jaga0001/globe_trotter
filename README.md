@@ -4,10 +4,7 @@ A Flutter-based travel companion application that helps users explore destinatio
 
 ## 🌐 Live Demo
 
-[![Live Demo](https://img.shields.io/badge/demo-online-brightgreen.svg)](https://jaga001.github.io/globe_trotter)
-[![GitHub Pages](https://img.shields.io/badge/Hosted%20on-GitHub%20Pages-blue.svg)](https://globetrotter-4fb91.web.app/)
-
-**🔗 [Try Globe Trotter Live](https://jaga001.github.io/globe_trotter)**
+**🔗 [Try Globe Trotter Live](https://globetrotter-4fb91.web.app/)**
 
 ## 📱 About
 
