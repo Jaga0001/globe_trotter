@@ -108,13 +108,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 📧 Contact
 
-Your Name - [@yourhandle](https://twitter.com/yourhandle)
-
-Project Link: [https://github.com/jaga001/globe_trotter](https://github.com/jaga001/globe_trotter)
-
-**Live Demo**: [https://jaga001.github.io/globe_trotter](https://jaga001.github.io/globe_trotter)
 
 ## 🙏 Acknowledgments
 
