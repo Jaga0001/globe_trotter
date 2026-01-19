@@ -17,8 +17,6 @@ class _CommunityPageState extends State<CommunityPage> {
   // Color scheme
   static const Color primaryPurple = Color(0xFF8B7B9E);
   static const Color darkPurple = Color(0xFF5D4E6D);
-  static const Color lightPurple = Color(0xFFF0ECF4);
-  static const Color accentPurple = Color(0xFFADA1BC);
 
   // Topic categories
   final List<String> _topics = [

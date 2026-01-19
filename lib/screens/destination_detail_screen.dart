@@ -1,27 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:ui';
 
 /// Theme constants for the destination detail screen
 abstract class DestinationTheme {
-  static const Color primaryColor = Color(0xFF6C5CE7);
-  static const Color accentColor = Color(0xFF0984E3);
-  static const Color darkColor = Color(0xFF2D3436);
-  static const Color lightBg = Color(0xFFF8F9FA);
+  static const Color primaryColor = Color(0xFF6366F1);
+  static const Color secondaryColor = Color(0xFF8B5CF6);
+  static const Color accentColor = Color(0xFF06B6D4);
+  static const Color darkColor = Color(0xFF0F172A);
+  static const Color darkMuted = Color(0xFF64748B);
+  static const Color lightBg = Color(0xFFF8FAFC);
   static const Color cardBg = Color(0xFFFFFFFF);
-  static const Color gradientStart = Color(0xFF6C5CE7);
-  static const Color gradientEnd = Color(0xFF0984E3);
+  static const Color surfaceColor = Color(0xFFF1F5F9);
+  static const Color successColor = Color(0xFF10B981);
+  static const Color warningColor = Color(0xFFF59E0B);
+  static const Color errorColor = Color(0xFFEF4444);
 
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [gradientStart, gradientEnd],
+    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const LinearGradient ratingGradient = LinearGradient(
-    colors: [Color(0xFFFFC837), Color(0xFFFF8008)],
+  static const LinearGradient shimmerGradient = LinearGradient(
+    colors: [Color(0xFF6366F1), Color(0xFF06B6D4), Color(0xFF8B5CF6)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+
+  static List<BoxShadow> get elevatedShadow => [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.08),
+      blurRadius: 32,
+      offset: const Offset(0, 8),
+      spreadRadius: 0,
+    ),
+  ];
+
+  static List<BoxShadow> get subtleShadow => [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.04),
+      blurRadius: 16,
+      offset: const Offset(0, 4),
+    ),
+  ];
 }
 
 class DestinationDetailScreen extends StatefulWidget {
@@ -46,91 +68,157 @@ class DestinationDetailScreen extends StatefulWidget {
 }
 
 class _DestinationDetailScreenState extends State<DestinationDetailScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _animationController;
-  late final Animation<double> _fadeAnimation;
-  late final Animation<double> _slideAnimation;
-  bool _isFavorite = false;
+  late final TabController _tabController;
+  late final ScrollController _scrollController;
 
-  static const _animationDuration = Duration(milliseconds: 1200);
+  bool _isFavorite = false;
+  bool _isAppBarCollapsed = false;
+  int _selectedTab = 0;
 
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
-  }
-
-  void _initializeAnimations() {
     _animationController = AnimationController(
       vsync: this,
-      duration: _animationDuration,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      duration: const Duration(milliseconds: 800),
+    )..forward();
+
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      setState(() => _selectedTab = _tabController.index);
+    });
+
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
       ),
     );
-    _slideAnimation = Tween<double>(begin: 30.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.2, 0.8, curve: Curves.easeOutCubic),
-      ),
-    );
-    _animationController.forward();
+  }
+
+  void _onScroll() {
+    final isCollapsed = _scrollController.offset > 280;
+    if (isCollapsed != _isAppBarCollapsed) {
+      setState(() => _isAppBarCollapsed = isCollapsed);
+    }
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _tabController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   String get _description {
     const descriptions = {
       'Taj Mahal':
-          'An ivory-white marble mausoleum on the right bank of the river Yamuna. Built by Mughal emperor Shah Jahan in memory of his wife Mumtaz Mahal, it is widely recognized as the jewel of Muslim art in India and one of the universally admired masterpieces of the world\'s heritage.',
+          'An ivory-white marble mausoleum on the right bank of the river Yamuna. Built by Mughal emperor Shah Jahan in memory of his wife Mumtaz Mahal, it is widely recognized as the jewel of Muslim art in India.',
       'Jaipur Palace':
-          'The Pink City is famous for its stunning palaces, forts, and vibrant culture. Hawa Mahal, City Palace, and Amber Fort are architectural marvels showcasing Rajputana grandeur and rich heritage.',
+          'The Pink City is famous for its stunning palaces, forts, and vibrant culture. Hawa Mahal, City Palace, and Amber Fort are architectural marvels showcasing Rajputana grandeur.',
       'Backwaters':
-          'A network of brackish lagoons and lakes lying parallel to the Arabian Sea coast. Famous for houseboat cruises, serene landscapes, and lush greenery offering a unique and tranquil experience.',
+          'A network of brackish lagoons and lakes lying parallel to the Arabian Sea coast. Famous for houseboat cruises, serene landscapes, and lush greenery.',
       'Valley of Flowers':
-          'A UNESCO World Heritage Site, this alpine valley is renowned for its meadows of endemic alpine flowers and outstanding natural beauty. A paradise for nature lovers and trekkers.',
+          'A UNESCO World Heritage Site, this alpine valley is renowned for its meadows of endemic alpine flowers and outstanding natural beauty.',
       'Goa Beaches':
-          'Known for pristine beaches, Portuguese heritage, vibrant nightlife, and water sports. A perfect blend of relaxation, adventure, and cultural experiences.',
+          'Known for pristine beaches, Portuguese heritage, vibrant nightlife, and water sports. A perfect blend of relaxation and adventure.',
       'Varanasi Ghats':
-          'One of the oldest living cities in the world, famous for its spiritual significance, ancient temples, and the sacred Ganges river ghats where elaborate ceremonies take place.',
+          'One of the oldest living cities in the world, famous for its spiritual significance and the sacred Ganges river ghats.',
     };
     return descriptions[widget.name] ??
         'Discover this amazing destination in India with rich culture, heritage, and natural beauty.';
   }
 
+  List<String> get _galleryImages => [
+    widget.coverImage,
+    'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800',
+    'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800',
+    'https://images.unsplash.com/photo-1585135497273-1a86b09fe70e?w=800',
+  ];
+
+  List<_FeatureItem> get _features => const [
+    _FeatureItem(
+      icon: Icons.schedule_rounded,
+      label: '2-3 Days',
+      subtitle: 'Duration',
+    ),
+    _FeatureItem(
+      icon: Icons.group_rounded,
+      label: '2-6 People',
+      subtitle: 'Group Size',
+    ),
+    _FeatureItem(
+      icon: Icons.wb_sunny_rounded,
+      label: 'Oct - Mar',
+      subtitle: 'Best Season',
+    ),
+    _FeatureItem(
+      icon: Icons.translate_rounded,
+      label: 'English',
+      subtitle: 'Language',
+    ),
+  ];
+
   List<ExpenseItem> get _travelExpenses => const [
-    ExpenseItem(name: 'Accommodation', cost: 3000, icon: Icons.hotel),
-    ExpenseItem(name: 'Transportation', cost: 1500, icon: Icons.directions_car),
-    ExpenseItem(name: 'Food & Dining', cost: 2000, icon: Icons.restaurant),
-    ExpenseItem(name: 'Entry Fees', cost: 500, icon: Icons.confirmation_number),
-    ExpenseItem(name: 'Activities', cost: 1000, icon: Icons.local_activity),
+    ExpenseItem(
+      name: 'Accommodation',
+      cost: 3000,
+      icon: Icons.hotel_rounded,
+      color: Color(0xFF6366F1),
+    ),
+    ExpenseItem(
+      name: 'Transportation',
+      cost: 1500,
+      icon: Icons.directions_car_rounded,
+      color: Color(0xFF06B6D4),
+    ),
+    ExpenseItem(
+      name: 'Food & Dining',
+      cost: 2000,
+      icon: Icons.restaurant_rounded,
+      color: Color(0xFFF59E0B),
+    ),
+    ExpenseItem(
+      name: 'Entry Fees',
+      cost: 500,
+      icon: Icons.confirmation_number_rounded,
+      color: Color(0xFF10B981),
+    ),
+    ExpenseItem(
+      name: 'Activities',
+      cost: 1000,
+      icon: Icons.local_activity_rounded,
+      color: Color(0xFFEF4444),
+    ),
   ];
 
   double get _totalCost =>
       _travelExpenses.fold(0.0, (sum, item) => sum + item.cost);
 
   void _toggleFavorite() {
+    HapticFeedback.lightImpact();
     setState(() => _isFavorite = !_isFavorite);
-    _showSnackBar(
-      _isFavorite ? 'Added to favorites' : 'Removed from favorites',
-    );
+    _showSnackBar(_isFavorite ? 'Added to wishlist' : 'Removed from wishlist');
   }
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 1),
+        content: Text(
+          message,
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
         behavior: SnackBarBehavior.floating,
         backgroundColor: DestinationTheme.darkColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -139,72 +227,133 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: DestinationTheme.lightBg,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          _buildAppBar(),
-          SliverToBoxAdapter(
-            child: AnimatedBuilder(
-              animation: _animationController,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, _slideAnimation.value),
-                  child: Opacity(opacity: _fadeAnimation.value, child: child),
-                );
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeaderSection(),
-                  const SizedBox(height: 8),
-                  _buildQuickStats(),
-                  const SizedBox(height: 24),
-                  _buildDescriptionSection(),
-                  const SizedBox(height: 24),
-                  _buildCostBreakdown(),
-                  const SizedBox(height: 24),
-                  _buildActionButtons(),
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              _buildHeroSection(),
+              SliverToBoxAdapter(child: _buildContent()),
+            ],
           ),
+          _buildTopBar(),
+          _buildBottomBar(),
         ],
       ),
     );
   }
 
-  Widget _buildAppBar() {
-    return SliverAppBar(
-      expandedHeight: 400,
-      pinned: true,
-      stretch: true,
-      backgroundColor: DestinationTheme.cardBg,
-      elevation: 0,
-      leading: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: _GlassIconButton(
-          icon: Icons.arrow_back_ios_new,
-          onPressed: () => Navigator.pop(context),
+  Widget _buildTopBar() {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: _isAppBarCollapsed
+              ? DestinationTheme.cardBg
+              : Colors.transparent,
+          boxShadow: _isAppBarCollapsed ? DestinationTheme.subtleShadow : null,
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                _buildCircularButton(
+                  icon: Icons.arrow_back_rounded,
+                  onTap: () => Navigator.pop(context),
+                  isLight: !_isAppBarCollapsed,
+                ),
+                const Spacer(),
+                if (_isAppBarCollapsed)
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      widget.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: DestinationTheme.darkColor,
+                      ),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                const Spacer(),
+                _buildCircularButton(
+                  icon: _isFavorite
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_outline_rounded,
+                  onTap: _toggleFavorite,
+                  isLight: !_isAppBarCollapsed,
+                  iconColor: _isFavorite ? DestinationTheme.errorColor : null,
+                ),
+                const SizedBox(width: 8),
+                _buildCircularButton(
+                  icon: Icons.share_rounded,
+                  onTap: () => _showSnackBar('Share feature coming soon!'),
+                  isLight: !_isAppBarCollapsed,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: _GlassIconButton(
-            icon: _isFavorite ? Icons.favorite : Icons.favorite_border,
-            iconColor: _isFavorite ? Colors.red : DestinationTheme.darkColor,
-            onPressed: _toggleFavorite,
+    );
+  }
+
+  Widget _buildCircularButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    bool isLight = true,
+    Color? iconColor,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: isLight ? 10 : 0,
+            sigmaY: isLight ? 10 : 0,
+          ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isLight
+                  ? Colors.black.withOpacity(0.2)
+                  : DestinationTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isLight
+                    ? Colors.white.withOpacity(0.2)
+                    : Colors.transparent,
+              ),
+            ),
+            child: Icon(
+              icon,
+              size: 22,
+              color:
+                  iconColor ??
+                  (isLight ? Colors.white : DestinationTheme.darkColor),
+            ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.only(right: 8.0, top: 8, bottom: 8),
-          child: _GlassIconButton(
-            icon: Icons.share_outlined,
-            onPressed: () => _showSnackBar('Share feature coming soon!'),
-          ),
-        ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildHeroSection() {
+    return SliverAppBar(
+      expandedHeight: 380,
+      pinned: false,
+      automaticallyImplyLeading: false,
+      backgroundColor: Colors.transparent,
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           fit: StackFit.expand,
@@ -214,22 +363,133 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen>
               child: Image.network(
                 widget.coverImage,
                 fit: BoxFit.cover,
-                loadingBuilder: _imageLoadingBuilder,
-                errorBuilder: _imageErrorBuilder,
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return Container(
+                    color: DestinationTheme.surfaceColor,
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: DestinationTheme.primaryColor,
+                      ),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stack) => Container(
+                  decoration: const BoxDecoration(
+                    gradient: DestinationTheme.primaryGradient,
+                  ),
+                  child: const Icon(
+                    Icons.landscape_rounded,
+                    size: 64,
+                    color: Colors.white38,
+                  ),
+                ),
               ),
             ),
-            DecoratedBox(
+            Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withAlpha(102),
+                    Colors.black.withOpacity(0.3),
                     Colors.transparent,
-                    Colors.black.withAlpha(179),
+                    Colors.black.withOpacity(0.6),
                   ],
                   stops: const [0.0, 0.4, 1.0],
                 ),
+              ),
+            ),
+            Positioned(
+              bottom: 24,
+              left: 20,
+              right: 20,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: DestinationTheme.successColor,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      'POPULAR',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    widget.name,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      height: 1.1,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on_rounded,
+                        color: Colors.white70,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${widget.city}, ${widget.state}',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.85),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Color(0xFFFBBF24),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              widget.rating,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
@@ -238,119 +498,267 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen>
     );
   }
 
-  Widget _imageLoadingBuilder(
-    BuildContext context,
-    Widget child,
-    ImageChunkEvent? loadingProgress,
-  ) {
-    if (loadingProgress == null) return child;
-    return Container(
-      color: DestinationTheme.lightBg,
-      child: Center(
-        child: CircularProgressIndicator(
-          value: loadingProgress.expectedTotalBytes != null
-              ? loadingProgress.cumulativeBytesLoaded /
-                    loadingProgress.expectedTotalBytes!
-              : null,
-          valueColor: const AlwaysStoppedAnimation<Color>(
-            DestinationTheme.primaryColor,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _imageErrorBuilder(
-    BuildContext context,
-    Object error,
-    StackTrace? stackTrace,
-  ) {
+  Widget _buildContent() {
     return Container(
       decoration: const BoxDecoration(
-        gradient: DestinationTheme.primaryGradient,
+        color: DestinationTheme.lightBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: const Center(
-        child: Icon(Icons.landscape, size: 100, color: Colors.white70),
+      child: Column(
+        children: [
+          const SizedBox(height: 8),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildTabBar(),
+          const SizedBox(height: 20),
+          _buildTabContent(),
+          const SizedBox(height: 100),
+        ],
       ),
     );
   }
 
-  Widget _buildHeaderSection() {
+  Widget _buildTabBar() {
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: DestinationTheme.cardBg,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(32),
-          topRight: Radius.circular(32),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(13),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
+        color: DestinationTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          _buildTab('Overview', 0),
+          _buildTab('Gallery', 1),
+          _buildTab('Budget', 2),
         ],
       ),
-      transform: Matrix4.translationValues(0, -32, 0),
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
-      child: Row(
+    );
+  }
+
+  Widget _buildTab(String label, int index) {
+    final isSelected = _selectedTab == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          _tabController.animateTo(index);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? DestinationTheme.cardBg : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: isSelected ? DestinationTheme.subtleShadow : null,
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isSelected
+                  ? DestinationTheme.primaryColor
+                  : DestinationTheme.darkMuted,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabContent() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: IndexedStack(
+        key: ValueKey(_selectedTab),
+        index: _selectedTab,
+        children: [_buildOverviewTab(), _buildGalleryTab(), _buildBudgetTab()],
+      ),
+    );
+  }
+
+  Widget _buildOverviewTab() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.name,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: DestinationTheme.darkColor,
-                    height: 1.2,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildLocationRow(),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          _buildRatingBadge(),
+          _buildFeaturesGrid(),
+          const SizedBox(height: 28),
+          _buildAboutSection(),
+          const SizedBox(height: 28),
+          _buildHighlightsSection(),
         ],
       ),
     );
   }
 
-  Widget _buildLocationRow() {
+  Widget _buildFeaturesGrid() {
     return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                DestinationTheme.gradientStart.withAlpha(26),
-                DestinationTheme.gradientEnd.withAlpha(26),
+      children: _features.map((feature) {
+        return Expanded(
+          child: Container(
+            margin: EdgeInsets.only(right: feature != _features.last ? 12 : 0),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: DestinationTheme.cardBg,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: DestinationTheme.subtleShadow,
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: DestinationTheme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    feature.icon,
+                    color: DestinationTheme.primaryColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  feature.label,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: DestinationTheme.darkColor,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  feature.subtitle,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: DestinationTheme.darkMuted,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
-            borderRadius: BorderRadius.circular(8),
           ),
-          child: const Icon(
-            Icons.location_on_rounded,
-            color: DestinationTheme.primaryColor,
-            size: 18,
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildAboutSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'About',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: DestinationTheme.darkColor,
           ),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            '${widget.city}, ${widget.state}',
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.2,
+        const SizedBox(height: 12),
+        Text(
+          _description,
+          style: TextStyle(
+            fontSize: 15,
+            height: 1.7,
+            color: DestinationTheme.darkMuted,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHighlightsSection() {
+    final highlights = [
+      _HighlightItem(
+        icon: Icons.camera_alt_rounded,
+        title: 'Photography',
+        desc: 'Stunning photo spots',
+      ),
+      _HighlightItem(
+        icon: Icons.restaurant_rounded,
+        title: 'Local Cuisine',
+        desc: 'Authentic flavors',
+      ),
+      _HighlightItem(
+        icon: Icons.history_rounded,
+        title: 'Rich History',
+        desc: 'Cultural heritage',
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Highlights',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: DestinationTheme.darkColor,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...highlights.map(
+          (h) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: DestinationTheme.cardBg,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: DestinationTheme.subtleShadow,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: DestinationTheme.primaryGradient,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(h.icon, color: Colors.white, size: 22),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        h.title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: DestinationTheme.darkColor,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        h.desc,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: DestinationTheme.darkMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: DestinationTheme.darkMuted,
+                ),
+              ],
             ),
           ),
         ),
@@ -358,257 +766,234 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen>
     );
   }
 
-  Widget _buildRatingBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: DestinationTheme.ratingGradient,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF8008).withAlpha(102),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.star_rounded, color: Colors.white, size: 20),
-          const SizedBox(width: 6),
-          Text(
-            widget.rating,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 18,
-              color: Colors.white,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickStats() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        children: [
-          Expanded(
-            child: _StatCard(
-              icon: Icons.access_time_rounded,
-              value: '2-3 Days',
-              label: 'Duration',
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _StatCard(
-              icon: Icons.groups_rounded,
-              value: 'All Ages',
-              label: 'Suitable For',
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _StatCard(
-              icon: Icons.camera_alt_rounded,
-              value: 'Photo Spot',
-              label: 'Type',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDescriptionSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'About This Destination',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: DestinationTheme.darkColor,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: DestinationTheme.cardBg,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.grey.shade200),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(10),
-                  blurRadius: 20,
-                  offset: const Offset(0, 4),
+  Widget _buildGalleryTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Photos',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: DestinationTheme.darkColor,
                 ),
-              ],
-            ),
-            child: Text(
-              _description,
-              style: TextStyle(
-                fontSize: 15,
-                height: 1.8,
-                color: Colors.grey.shade700,
-                letterSpacing: 0.3,
-                fontWeight: FontWeight.w400,
               ),
-            ),
+              Text(
+                '${_galleryImages.length} images',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: DestinationTheme.darkMuted,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 200,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: _galleryImages.length,
+            itemBuilder: (context, index) {
+              return Container(
+                width: 280,
+                margin: EdgeInsets.only(
+                  right: index < _galleryImages.length - 1 ? 16 : 0,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: DestinationTheme.subtleShadow,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.network(
+                    _galleryImages[index],
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, progress) {
+                      if (progress == null) return child;
+                      return Container(
+                        color: DestinationTheme.surfaceColor,
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: GridView.count(
+            crossAxisCount: 3,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            children: List.generate(6, (index) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: DestinationTheme.surfaceColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: index < _galleryImages.length
+                      ? Image.network(
+                          _galleryImages[index % _galleryImages.length],
+                          fit: BoxFit.cover,
+                        )
+                      : Center(
+                          child: Icon(
+                            Icons.add_rounded,
+                            color: DestinationTheme.darkMuted,
+                          ),
+                        ),
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildCostBreakdown() {
+  Widget _buildBudgetTab() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildTotalBudgetCard(),
+          const SizedBox(height: 24),
           const Text(
-            'Budget Breakdown',
+            'Cost Breakdown',
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.w800,
               color: DestinationTheme.darkColor,
-              letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 16),
-          _buildTotalCostCard(),
-          const SizedBox(height: 20),
-          ..._travelExpenses.asMap().entries.map((entry) {
-            return TweenAnimationBuilder<double>(
-              duration: Duration(milliseconds: 600 + (entry.key * 100)),
-              tween: Tween<double>(begin: 0, end: 1),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, child) {
-                return Transform.translate(
-                  offset: Offset(30 * (1 - value), 0),
-                  child: Opacity(opacity: value, child: child),
-                );
-              },
-              child: _ExpenseItemCard(expense: entry.value),
-            );
-          }),
+          ..._travelExpenses.map(
+            (expense) => _ExpenseRow(expense: expense, total: _totalCost),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTotalCostCard() {
+  Widget _buildTotalBudgetCard() {
     return Container(
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: DestinationTheme.primaryGradient,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: DestinationTheme.primaryColor.withAlpha(77),
+            color: DestinationTheme.primaryColor.withOpacity(0.4),
             blurRadius: 24,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 12),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Total Estimated Cost',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white70,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        '₹',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        _totalCost.toStringAsFixed(0),
-                        style: const TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          height: 1,
-                          letterSpacing: -1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              const Text(
+                'Estimated Budget',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+                  horizontal: 10,
+                  vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(51),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withAlpha(77)),
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
                   'Per Person',
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
                     color: Colors.white,
-                    letterSpacing: 0.5,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              const Text(
+                '₹',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 4),
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: _totalCost),
+                duration: const Duration(milliseconds: 1200),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return Text(
+                    value.toStringAsFixed(0),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 42,
+                      fontWeight: FontWeight.w800,
+                      height: 1,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(38),
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.info_outline,
-                  size: 14,
-                  color: Colors.white.withAlpha(230),
+                  Icons.info_outline_rounded,
+                  color: Colors.white.withOpacity(0.8),
+                  size: 18,
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  'Estimated for 2-3 days trip',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withAlpha(230),
-                    fontWeight: FontWeight.w500,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Prices are estimates and may vary based on season',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.85),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ],
@@ -619,349 +1004,225 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen>
     );
   }
 
-  Widget _buildActionButtons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          _PrimaryActionButton(
-            label: 'Plan Your Trip',
-            icon: Icons.calendar_month_rounded,
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(height: 14),
-          _SecondaryActionButton(
-            label: 'View More Details',
-            icon: Icons.explore_rounded,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Row(
-                    children: const [
-                      Icon(Icons.explore_rounded, color: Colors.white),
-                      SizedBox(width: 12),
-                      Text('More details coming soon!'),
+  Widget _buildBottomBar() {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          16,
+          20,
+          MediaQuery.of(context).padding.bottom + 16,
+        ),
+        decoration: BoxDecoration(
+          color: DestinationTheme.cardBg,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 24,
+              offset: const Offset(0, -8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'From',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: DestinationTheme.darkMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '₹${_totalCost.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: DestinationTheme.darkColor,
+                        ),
+                      ),
+                      Text(
+                        ' /person',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: DestinationTheme.darkMuted,
+                        ),
+                      ),
                     ],
                   ),
-                  backgroundColor: DestinationTheme.darkColor,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                ],
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  _showSnackBar('Booking feature coming soon!');
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    gradient: DestinationTheme.primaryGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: DestinationTheme.primaryColor.withOpacity(0.4),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                  margin: const EdgeInsets.all(16),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.calendar_today_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        'Book Now',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// MARK: - Supporting Widgets
-
-class _GlassIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onPressed;
-  final Color iconColor;
-
-  const _GlassIconButton({
-    required this.icon,
-    required this.onPressed,
-    this.iconColor = DestinationTheme.darkColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withAlpha(230),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withAlpha(77), width: 1.5),
-          ),
-          child: IconButton(
-            icon: Icon(icon, color: iconColor, size: 20),
-            onPressed: onPressed,
-          ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _StatCard extends StatelessWidget {
+// MARK: - Data Models & Supporting Widgets
+
+class _FeatureItem {
   final IconData icon;
-  final String value;
   final String label;
+  final String subtitle;
 
-  const _StatCard({
+  const _FeatureItem({
     required this.icon,
-    required this.value,
     required this.label,
+    required this.subtitle,
   });
+}
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: DestinationTheme.cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(8),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  DestinationTheme.gradientStart.withAlpha(26),
-                  DestinationTheme.gradientEnd.withAlpha(26),
-                ],
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: DestinationTheme.primaryColor, size: 20),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: DestinationTheme.darkColor,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
+class _HighlightItem {
+  final IconData icon;
+  final String title;
+  final String desc;
+
+  const _HighlightItem({
+    required this.icon,
+    required this.title,
+    required this.desc,
+  });
 }
 
 class ExpenseItem {
   final String name;
   final double cost;
   final IconData icon;
+  final Color color;
 
   const ExpenseItem({
     required this.name,
     required this.cost,
     required this.icon,
+    this.color = DestinationTheme.primaryColor,
   });
 }
 
-class _ExpenseItemCard extends StatelessWidget {
+class _ExpenseRow extends StatelessWidget {
   final ExpenseItem expense;
+  final double total;
 
-  const _ExpenseItemCard({required this.expense});
+  const _ExpenseRow({required this.expense, required this.total});
 
   @override
   Widget build(BuildContext context) {
+    final percentage = expense.cost / total;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: DestinationTheme.cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(8),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: DestinationTheme.subtleShadow,
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  DestinationTheme.gradientStart.withAlpha(26),
-                  DestinationTheme.gradientEnd.withAlpha(26),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: expense.color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(expense.icon, color: expense.color, size: 20),
               ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              expense.icon,
-              color: DestinationTheme.primaryColor,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              expense.name,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: DestinationTheme.darkColor,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  DestinationTheme.gradientStart.withAlpha(26),
-                  DestinationTheme.gradientEnd.withAlpha(26),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '₹${expense.cost.toStringAsFixed(0)}',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: DestinationTheme.primaryColor,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PrimaryActionButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  const _PrimaryActionButton({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 62,
-      decoration: BoxDecoration(
-        gradient: DestinationTheme.primaryGradient,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: DestinationTheme.primaryColor.withAlpha(102),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(18),
-          child: Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 22, color: Colors.white),
-                const SizedBox(width: 12),
-                Text(
-                  label,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  expense.name,
                   style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    letterSpacing: 0.5,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: DestinationTheme.darkColor,
                   ),
                 ),
-              ],
-            ),
+              ),
+              Text(
+                '₹${expense.cost.toStringAsFixed(0)}',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: expense.color,
+                ),
+              ),
+            ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SecondaryActionButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  const _SecondaryActionButton({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 62,
-      decoration: BoxDecoration(
-        color: DestinationTheme.cardBg,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: DestinationTheme.primaryColor, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(8),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+          const SizedBox(height: 12),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: percentage),
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: value,
+                  minHeight: 6,
+                  backgroundColor: expense.color.withOpacity(0.1),
+                  valueColor: AlwaysStoppedAnimation<Color>(expense.color),
+                ),
+              );
+            },
           ),
         ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(18),
-          child: Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 22, color: DestinationTheme.primaryColor),
-                const SizedBox(width: 12),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: DestinationTheme.primaryColor,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
