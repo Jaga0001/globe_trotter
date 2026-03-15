@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:globe_trotter/components/create_dialog.dart';
 import 'package:globe_trotter/screens/Iternary_view_screen.dart';
 import 'package:globe_trotter/screens/destination_detail_screen.dart';
@@ -13,16 +14,25 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _MainPageState extends State<MainPage>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   int _selectedIndex = 0;
   List<Map<String, String>> _filteredDestinations = [];
+  bool _isSearchFocused = false;
 
-  // Updated color scheme - softer purple tones
-  static const Color primaryPurple = Color(0xFF8B7B9E);
-  static const Color darkPurple = Colors.deepPurple;
-  static const Color lightPurple = Color(0xFFF0ECF4);
-  static const Color accentPurple = Color(0xFFADA1BC);
+  // ── Refined Palette ──────────────────────────────────────────────────────
+  static const Color primary = Color(0xFF6C5CE7);
+  static const Color primaryDeep = Color(0xFF4834D4);
+  static const Color primarySoft = Color(0xFFEEEBFF);
+  static const Color surface = Color(0xFFF9F8FE);
+  static const Color card = Colors.white;
+  static const Color textPrimary = Color(0xFF1A1530);
+  static const Color textSecondary = Color(0xFF8E8AA0);
+  static const Color accent = Color(0xFFFF6B6B);
+  static const Color accentGreen = Color(0xFF00C896);
+  static const Color accentAmber = Color(0xFFFFB038);
 
   late final List<Map<String, String>> _allDestinations = [
     {
@@ -30,6 +40,7 @@ class _MainPageState extends State<MainPage> {
       "city": "Agra",
       "state": "Uttar Pradesh",
       "rating": "4.9",
+      "tag": "UNESCO",
       "cover":
           "https://upload.wikimedia.org/wikipedia/commons/1/1b/Taj_Mahal-08.jpg",
     },
@@ -38,6 +49,7 @@ class _MainPageState extends State<MainPage> {
       "city": "Jaipur",
       "state": "Rajasthan",
       "rating": "4.8",
+      "tag": "Heritage",
       "cover":
           "https://upload.wikimedia.org/wikipedia/commons/3/37/Hawa_Mahal_2011.jpg",
     },
@@ -46,6 +58,7 @@ class _MainPageState extends State<MainPage> {
       "city": "Alleppey",
       "state": "Kerala",
       "rating": "4.9",
+      "tag": "Nature",
       "cover":
           "https://upload.wikimedia.org/wikipedia/commons/4/4e/Kerala_backwaters%2C_Houseboats%2C_India.jpg",
     },
@@ -54,6 +67,7 @@ class _MainPageState extends State<MainPage> {
       "city": "Chamoli",
       "state": "Uttarakhand",
       "rating": "4.7",
+      "tag": "Trek",
       "cover":
           "https://upload.wikimedia.org/wikipedia/commons/b/b0/Valley_of_flowers_%2829336158797%29.jpg",
     },
@@ -62,6 +76,7 @@ class _MainPageState extends State<MainPage> {
       "city": "Panaji",
       "state": "Goa",
       "rating": "4.6",
+      "tag": "Beach",
       "cover":
           "https://upload.wikimedia.org/wikipedia/commons/3/3f/Palolem_Beach%2C_south_Goa.jpg",
     },
@@ -70,8 +85,52 @@ class _MainPageState extends State<MainPage> {
       "city": "Varanasi",
       "state": "Uttar Pradesh",
       "rating": "4.8",
+      "tag": "Spiritual",
       "cover":
           "https://upload.wikimedia.org/wikipedia/commons/b/b3/Varanasi_246_view_from_Gay_Ghat_towards_Ganges_river_%2833861353814%29.jpg",
+    },
+  ];
+
+  late final List<Map<String, dynamic>> _mockTrips = [
+    {
+      'name': 'Rajasthan Heritage',
+      'place': 'Jaipur',
+      'date': 'Mar 2024',
+      'days': '7 days',
+      'status': 'Upcoming',
+      'image':
+          'https://upload.wikimedia.org/wikipedia/commons/3/37/Hawa_Mahal_2011.jpg',
+      'members': 4,
+    },
+    {
+      'name': 'Kerala Backwaters',
+      'place': 'Alleppey',
+      'date': 'Jan 2024',
+      'days': '5 days',
+      'status': 'Completed',
+      'image':
+          'https://upload.wikimedia.org/wikipedia/commons/4/4e/Kerala_backwaters%2C_Houseboats%2C_India.jpg',
+      'members': 2,
+    },
+    {
+      'name': 'Himalayan Trek',
+      'place': 'Manali',
+      'date': 'Dec 2023',
+      'days': '10 days',
+      'status': 'Completed',
+      'image':
+          'https://upload.wikimedia.org/wikipedia/commons/b/b0/Valley_of_flowers_%2829336158797%29.jpg',
+      'members': 6,
+    },
+    {
+      'name': 'Goa Beach Vacation',
+      'place': 'Panaji',
+      'date': 'Nov 2023',
+      'days': '4 days',
+      'status': 'Completed',
+      'image':
+          'https://upload.wikimedia.org/wikipedia/commons/3/3f/Palolem_Beach%2C_south_Goa.jpg',
+      'members': 3,
     },
   ];
 
@@ -80,63 +139,68 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     _searchController.addListener(_onSearchChanged);
     _filteredDestinations = _allDestinations;
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
   }
 
   @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   void _onSearchChanged() {
     final query = _searchController.text.toLowerCase().trim();
     setState(() {
-      if (query.isEmpty) {
-        _filteredDestinations = _allDestinations;
-      } else {
-        _filteredDestinations = _allDestinations
-            .where(
-              (dest) =>
-                  dest['name']!.toLowerCase().contains(query) ||
-                  dest['city']!.toLowerCase().contains(query) ||
-                  dest['state']!.toLowerCase().contains(query),
-            )
-            .toList();
-      }
+      _filteredDestinations = query.isEmpty
+          ? _allDestinations
+          : _allDestinations
+                .where(
+                  (d) =>
+                      d['name']!.toLowerCase().contains(query) ||
+                      d['city']!.toLowerCase().contains(query) ||
+                      d['state']!.toLowerCase().contains(query),
+                )
+                .toList();
     });
   }
 
+  // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWideScreen = screenWidth > 900;
+    final isWide = MediaQuery.of(context).size.width > 900;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F7FA),
-      // Mobile Bottom Navigation
-      bottomNavigationBar: !isWideScreen ? _buildBottomNavBar() : null,
-      // Main Body Row
-      body: Row(
-        children: [
-          // Side Navigation for Web
-          if (isWideScreen) _buildSideNav(),
-
-          // Dynamic Main Content Area
-          Expanded(child: _buildMainContent(isWideScreen, screenWidth)),
-        ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
       ),
-      // Only show FAB on specific tabs
-      floatingActionButton: (_selectedIndex == 0 || _selectedIndex == 1)
-          ? _buildFAB()
-          : null,
+      child: Scaffold(
+        backgroundColor: surface,
+        extendBody: true,
+        bottomNavigationBar: !isWide ? _buildBottomNav() : null,
+        body: Row(
+          children: [
+            if (isWide) _buildSideNav(),
+            Expanded(child: _buildMainContent(isWide)),
+          ],
+        ),
+        floatingActionButton:
+            (_selectedIndex == 0 || _selectedIndex == 1) && !isWide
+            ? _buildFAB()
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      ),
     );
   }
 
-  // --- Layout Selection ---
-
-  Widget _buildMainContent(bool isWideScreen, double screenWidth) {
-    // Switcher for different tabs to maintain the unified Scaffold
+  Widget _buildMainContent(bool isWide) {
     switch (_selectedIndex) {
       case 1:
         return const CalendarViewScreen();
@@ -145,300 +209,303 @@ class _MainPageState extends State<MainPage> {
       case 3:
         return const Center(child: Text('Saved Destinations (Coming Soon)'));
       case 4:
-        return ProfileSettingsPageWeb(
-          themeColor: primaryPurple,
-          accentColor: accentPurple,
+        return const ProfileSettingsPageWeb(
+          themeColor: primary,
+          accentColor: primaryDeep,
         );
-      case 0:
       default:
-        return _buildHomePage(isWideScreen, screenWidth);
+        return _buildHomePage(isWide);
     }
   }
 
-  Widget _buildHomePage(bool isWideScreen, double screenWidth) {
-    final contentMaxWidth = isWideScreen ? 1200.0 : screenWidth;
+  // ── HOME PAGE ─────────────────────────────────────────────────────────────
+  Widget _buildHomePage(bool isWide) {
+    final hPad = isWide ? 40.0 : 20.0;
 
-    return Column(
-      children: [
-        _buildTopBar(isWideScreen),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Center(
-              child: Container(
-                constraints: BoxConstraints(maxWidth: contentMaxWidth),
-                padding: EdgeInsets.symmetric(
-                  horizontal: isWideScreen ? 40.0 : 20.0,
-                  vertical: 24.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildWelcomeSection(),
-                    const SizedBox(height: 32),
-                    if (isWideScreen)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(flex: 2, child: _buildBannerSection()),
-                          const SizedBox(width: 24),
-                          Expanded(child: _buildBudgetHighlights()),
-                        ],
-                      )
-                    else ...[
-                      _buildBannerSection(),
-                      const SizedBox(height: 24),
-                      _buildBudgetHighlights(),
-                    ],
-                    const SizedBox(height: 32),
-                    _buildSearchBar(),
-                    const SizedBox(height: 32),
-                    _buildSectionHeader(
-                      _searchController.text.isEmpty
-                          ? 'Popular Destinations in India'
-                          : 'Search Results',
-                      onSeeAll: () {},
-                    ),
-                    const SizedBox(height: 20),
-                    _buildDestinationsGrid(screenWidth),
-                    const SizedBox(height: 40),
-                    _buildSectionHeader('Your Recent Trips', onSeeAll: () {}),
-                    const SizedBox(height: 20),
-                    _buildTripsGrid(screenWidth),
-                    const SizedBox(height: 40),
-                  ],
-                ),
-              ),
-            ),
+    return CustomScrollView(
+      controller: _scrollController,
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        // ── HERO SLIVER APP BAR ──
+        SliverAppBar(
+          pinned: true,
+          expandedHeight: isWide ? 0 : 220,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
           ),
-        ),
-      ],
-    );
-  }
-
-  // --- Navigation Widgets ---
-
-  Widget _buildBottomNavBar() {
-    return BottomNavigationBar(
-      currentIndex: _selectedIndex > 4
-          ? 4
-          : _selectedIndex, // Cap it for mobile safety
-      onTap: (index) => setState(() => _selectedIndex = index),
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: darkPurple,
-      unselectedItemColor: Colors.grey.shade500,
-      showUnselectedLabels: true,
-      selectedFontSize: 12,
-      unselectedFontSize: 12,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.explore_rounded),
-          label: 'Explore',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.luggage_rounded),
-          label: 'Community',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.bookmark_rounded),
-          label: 'Saved',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_rounded),
-          label: 'Settings',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSideNav() {
-    return Container(
-      width: 240,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(2, 0),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 24),
-          // Logo
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: primaryPurple,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.travel_explore,
-                    color: Colors.white,
-                    size: 24,
-                  ),
+          flexibleSpace: isWide
+              ? null
+              : FlexibleSpaceBar(
+                  collapseMode: CollapseMode.parallax,
+                  background: _buildMobileHeroHeader(),
                 ),
-                const SizedBox(width: 12),
-                const Text(
-                  'GlobeTrotter',
-                  style: TextStyle(
-                    color: darkPurple,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-          _buildNavItem(Icons.home_rounded, 'Home', 0),
-          _buildNavItem(Icons.explore_rounded, 'Explore', 1),
-          _buildNavItem(Icons.luggage_rounded, 'Community', 2),
-          _buildNavItem(Icons.bookmark_rounded, 'Saved', 3),
-          const Spacer(),
-          const Divider(),
-          _buildNavItem(Icons.settings_rounded, 'Settings', 4),
-          _buildNavItem(Icons.help_outline_rounded, 'Help', 5),
-          const SizedBox(height: 24),
-        ],
-      ),
-    );
-  }
+          title: _buildCollapsedTopBar(isWide),
+          titleSpacing: 0,
+          toolbarHeight: 64,
+        ),
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
-    final isSelected = _selectedIndex == index;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Material(
-        color: isSelected ? lightPurple : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => setState(() => _selectedIndex = index),
+        // ── WELCOME + STATS ──
+        SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  color: isSelected ? darkPurple : Colors.grey.shade600,
-                  size: 22,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: isSelected ? darkPurple : Colors.grey.shade700,
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                    fontSize: 14,
+            padding: EdgeInsets.fromLTRB(hPad, 24, hPad, 0),
+            child: isWide
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 5, child: _buildBannerSection()),
+                      const SizedBox(width: 24),
+                      Expanded(flex: 3, child: _buildBudgetCard()),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildMobileWelcomeRow(),
+                      const SizedBox(height: 20),
+                      _buildMobileStatsRow(),
+                    ],
                   ),
-                ),
-              ],
+          ),
+        ),
+
+        // ── SEARCH BAR ──
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(hPad, 28, hPad, 0),
+            child: _buildSearchBar(),
+          ),
+        ),
+
+        // ── SECTION: Destinations ──
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(hPad, 32, hPad, 16),
+            child: _buildSectionHeader(
+              _searchController.text.isEmpty
+                  ? 'Popular in India'
+                  : 'Search Results',
+              onSeeAll: () {},
             ),
           ),
         ),
-      ),
+
+        // ── DESTINATION CARDS ──
+        isWide
+            ? SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: hPad),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 300,
+                    mainAxisSpacing: 20,
+                    crossAxisSpacing: 20,
+                    childAspectRatio: 0.82,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (ctx, i) => _buildDestinationCard(_filteredDestinations[i]),
+                    childCount: _filteredDestinations.length,
+                  ),
+                ),
+              )
+            : SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 260,
+                  child: ListView.separated(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: hPad,
+                      vertical: 4,
+                    ),
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: _filteredDestinations.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 16),
+                    itemBuilder: (ctx, i) =>
+                        _buildDestinationCardMobile(_filteredDestinations[i]),
+                  ),
+                ),
+              ),
+
+        // ── SECTION: Recent Trips ──
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(hPad, 36, hPad, 16),
+            child: _buildSectionHeader('Your Trips', onSeeAll: () {}),
+          ),
+        ),
+
+        // ── TRIP CARDS ──
+        isWide
+            ? SliverPadding(
+                padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 100),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 400,
+                    mainAxisSpacing: 20,
+                    crossAxisSpacing: 20,
+                    childAspectRatio: 1.1,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (ctx, i) => _buildTripCard(_mockTrips[i]),
+                    childCount: _mockTrips.length,
+                  ),
+                ),
+              )
+            : SliverPadding(
+                padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 120),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (ctx, i) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _buildTripCardMobile(_mockTrips[i]),
+                    ),
+                    childCount: _mockTrips.length,
+                  ),
+                ),
+              ),
+      ],
     );
   }
 
-  // --- Header Elements ---
-
-  Widget _buildTopBar(bool isWideScreen) {
+  // ── MOBILE HERO HEADER ────────────────────────────────────────────────────
+  Widget _buildMobileHeroHeader() {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isWideScreen ? 40 : 20,
-        vertical: 16,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primary, primaryDeep],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          if (!isWideScreen) ...[
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: primaryPurple,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.travel_explore,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'GlobeTrotter',
-              style: TextStyle(
-                color: darkPurple,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-          ],
-          const Spacer(),
-          IconButton(
-            icon: Icon(
-              Icons.notifications_outlined,
-              color: Colors.grey.shade700,
-            ),
-            onPressed: () {},
-            tooltip: 'Notifications',
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ProfileSettingsPageWeb(
-                  themeColor: primaryPurple,
-                  accentColor: accentPurple,
-                ),
-              ),
-            ),
+          // Decorative circles
+          Positioned(
+            top: -40,
+            right: -40,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              width: 180,
+              height: 180,
               decoration: BoxDecoration(
-                color: lightPurple,
-                borderRadius: BorderRadius.circular(24),
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.07),
               ),
-              child: Row(
+            ),
+          ),
+          Positioned(
+            bottom: 20,
+            left: -30,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.06),
+              ),
+            ),
+          ),
+          // Content
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: primaryPurple,
-                    child: const Text(
-                      'RD',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Logo
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.travel_explore,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Text(
+                            'GlobeTrotter',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 17,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ],
                       ),
+                      // Notification + Avatar
+                      Row(
+                        children: [
+                          _buildIconBtn(
+                            Icons.notifications_outlined,
+                            Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ProfileSettingsPageWeb(
+                                  themeColor: primary,
+                                  accentColor: primaryDeep,
+                                ),
+                              ),
+                            ),
+                            child: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.5),
+                                  width: 2,
+                                ),
+                                color: Colors.white.withOpacity(0.2),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'RD',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Good Morning,\nRahul! 👋',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 26,
+                      height: 1.25,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Rahul D.',
+                  const SizedBox(height: 8),
+                  Text(
+                    'Where are you exploring next?',
                     style: TextStyle(
-                      color: darkPurple,
-                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withOpacity(0.8),
                       fontSize: 14,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                 ],
@@ -450,71 +517,1045 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Widget _buildWelcomeSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Welcome back, Rahul!',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
+  // ── COLLAPSED TOP BAR (shown when scrolled) ───────────────────────────────
+  Widget _buildCollapsedTopBar(bool isWide) {
+    if (isWide) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Row(
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.travel_explore,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'GlobeTrotter',
+                  style: TextStyle(
+                    color: textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            _buildIconBtn(Icons.notifications_outlined, textSecondary),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ProfileSettingsPageWeb(
+                    themeColor: primary,
+                    accentColor: primaryDeep,
+                  ),
+                ),
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: primarySoft,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: const Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 14,
+                      backgroundColor: primary,
+                      child: Text(
+                        'RD',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Rahul D.',
+                      style: TextStyle(
+                        color: textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          'Plan your next adventure across incredible India',
-          style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+      );
+    }
+    // Mobile: only visible when collapsed
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildIconBtn(IconData icon, Color color) {
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: color == Colors.white
+            ? Colors.white.withOpacity(0.15)
+            : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(icon, color: color, size: 20),
+    );
+  }
+
+  // ── MOBILE WELCOME ROW ────────────────────────────────────────────────────
+  Widget _buildMobileWelcomeRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Explore India',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: textPrimary,
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              '4 trips planned this year',
+              style: TextStyle(fontSize: 13, color: textSecondary),
+            ),
+          ],
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: primarySoft,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.calendar_today_rounded, size: 14, color: primary),
+              SizedBox(width: 6),
+              Text(
+                '2024',
+                style: TextStyle(
+                  color: primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  // --- Feature Blocks ---
+  // ── MOBILE STATS ROW ──────────────────────────────────────────────────────
+  Widget _buildMobileStatsRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildStatChip(
+            '₹24.5K',
+            'Spent',
+            accent,
+            Icons.account_balance_wallet_rounded,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildStatChip(
+            '₹5K',
+            'Saved',
+            accentGreen,
+            Icons.savings_rounded,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildStatChip(
+            '₹12K',
+            'Upcoming',
+            accentAmber,
+            Icons.event_rounded,
+          ),
+        ),
+      ],
+    );
+  }
 
+  Widget _buildStatChip(
+    String value,
+    String label,
+    Color color,
+    IconData icon,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 16),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              color: textPrimary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, color: textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── SEARCH BAR ────────────────────────────────────────────────────────────
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: primary.withOpacity(0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Focus(
+        onFocusChange: (focused) => setState(() => _isSearchFocused = focused),
+        child: TextField(
+          controller: _searchController,
+          style: const TextStyle(fontSize: 15, color: textPrimary),
+          decoration: InputDecoration(
+            hintText: 'Search destinations, cities...',
+            hintStyle: const TextStyle(color: textSecondary, fontSize: 14),
+            prefixIcon: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Icon(
+                Icons.search_rounded,
+                color: _isSearchFocused ? primary : textSecondary,
+                size: 22,
+              ),
+            ),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: textSecondary,
+                      size: 18,
+                    ),
+                    onPressed: () {
+                      _searchController.clear();
+                      FocusScope.of(context).unfocus();
+                    },
+                  )
+                : Container(
+                    margin: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: primarySoft,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.tune_rounded,
+                      color: primary,
+                      size: 18,
+                    ),
+                  ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: const BorderSide(color: primary, width: 1.5),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 18,
+              horizontal: 4,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── SECTION HEADER ────────────────────────────────────────────────────────
+  Widget _buildSectionHeader(String title, {VoidCallback? onSeeAll}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: textPrimary,
+            letterSpacing: -0.3,
+          ),
+        ),
+        if (onSeeAll != null)
+          GestureDetector(
+            onTap: onSeeAll,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: primarySoft,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'See all',
+                style: TextStyle(
+                  color: primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // ── DESTINATION CARD — MOBILE (horizontal scroll) ─────────────────────────
+  Widget _buildDestinationCardMobile(Map<String, String> dest) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DestinationDetailScreen(
+            name: dest['name']!,
+            city: dest['city']!,
+            state: dest['state']!,
+            rating: dest['rating']!,
+            coverImage: dest['cover']!,
+          ),
+        ),
+      ),
+      child: Container(
+        width: 185,
+        decoration: BoxDecoration(
+          color: card,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: primaryDeep.withOpacity(0.07),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image
+            Expanded(
+              flex: 6,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Hero(
+                    tag: 'dest_img_${dest['name']}',
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(22),
+                      ),
+                      child: Image.network(
+                        dest['cover']!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: primarySoft,
+                          child: const Icon(
+                            Icons.image_outlined,
+                            color: primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Tag badge
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.45),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        dest['tag'] ?? '',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Rating badge
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 12,
+                            color: accentAmber,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            dest['rating']!,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Bottom gradient
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(22),
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.15),
+                          ],
+                          stops: const [0.6, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Info
+            Expanded(
+              flex: 3,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      dest['name']!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_rounded,
+                          size: 12,
+                          color: textSecondary,
+                        ),
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(
+                            '${dest['city']}, ${dest['state']}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── DESTINATION CARD — WIDE ───────────────────────────────────────────────
+  Widget _buildDestinationCard(Map<String, String> dest) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      elevation: 0,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => DestinationDetailScreen(
+              name: dest['name']!,
+              city: dest['city']!,
+              state: dest['state']!,
+              rating: dest['rating']!,
+              coverImage: dest['cover']!,
+            ),
+          ),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: primaryDeep.withOpacity(0.06),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 5,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Hero(
+                      tag: 'dest_img_${dest['name']}',
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
+                        child: Image.network(dest['cover']!, fit: BoxFit.cover),
+                      ),
+                    ),
+                    Positioned(
+                      top: 14,
+                      left: 14,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          dest['tag'] ?? '',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 14,
+                      right: 14,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.95),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              size: 14,
+                              color: accentAmber,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              dest['rating']!,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            dest['name']!,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.location_on_rounded,
+                                size: 13,
+                                color: textSecondary,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  '${dest['city']}, ${dest['state']}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: textSecondary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: primarySoft,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 16,
+                            color: primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── TRIP CARD — MOBILE (vertical list) ───────────────────────────────────
+  Widget _buildTripCardMobile(Map<String, dynamic> trip) {
+    final isUpcoming = trip['status'] == 'Upcoming';
+    return GestureDetector(
+      onTap: () => _navigateToItinerary(trip),
+      child: Container(
+        height: 110,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: primaryDeep.withOpacity(0.06),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Image
+            ClipRRect(
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(20),
+              ),
+              child: SizedBox(
+                width: 110,
+                height: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      trip['image']!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          Container(color: primarySoft),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black.withOpacity(0.25),
+                            Colors.transparent,
+                          ],
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Info
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            trip['name']!,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isUpcoming
+                                ? primary.withOpacity(0.12)
+                                : Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            trip['status']!,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: isUpcoming
+                                  ? primary
+                                  : Colors.grey.shade500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on_rounded,
+                              size: 12,
+                              color: textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              trip['place']!,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: textSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_month_rounded,
+                              size: 12,
+                              color: textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${trip['date']} · ${trip['days']}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: textSecondary,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Icon(
+                              Icons.group_rounded,
+                              size: 12,
+                              color: textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${trip['members']}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.only(right: 14),
+              child: Icon(
+                Icons.chevron_right_rounded,
+                color: textSecondary,
+                size: 20,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── TRIP CARD — WIDE ─────────────────────────────────────────────────────
+  Widget _buildTripCard(Map<String, dynamic> trip) {
+    final isUpcoming = trip['status'] == 'Upcoming';
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => _navigateToItinerary(trip),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: primaryDeep.withOpacity(0.06),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 4,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                      child: Image.network(trip['image']!, fit: BoxFit.cover),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withOpacity(0.3),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 14,
+                      right: 14,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isUpcoming ? primary : Colors.grey.shade600,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Text(
+                          trip['status']!,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        trip['name']!,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_month_rounded,
+                            size: 13,
+                            color: textSecondary,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            '${trip['date']} · ${trip['days']}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── BANNER (wide only) ────────────────────────────────────────────────────
   Widget _buildBannerSection() {
     return Container(
-      // Make it slightly shorter on mobile to save real estate
-      height: 250,
-      width: double.infinity,
+      height: 220,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [primaryPurple, darkPurple],
+          colors: [primary, primaryDeep],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: primaryPurple.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: primaryDeep.withOpacity(0.2),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
       child: Stack(
         children: [
           Positioned(
-            right: -40,
-            bottom: -40,
+            right: -20,
+            bottom: -30,
             child: Icon(
-              Icons.flight_takeoff,
-              size: 180,
-              color: Colors.white.withOpacity(0.1),
-            ),
-          ),
-          Positioned(
-            right: 40,
-            top: 20,
-            child: Icon(
-              Icons.location_on,
-              size: 60,
-              color: Colors.white.withOpacity(0.15),
+              Icons.flight_takeoff_rounded,
+              size: 150,
+              color: Colors.white.withOpacity(0.08),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(28.0),
+            padding: const EdgeInsets.all(28),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -527,12 +1568,12 @@ class _MainPageState extends State<MainPage> {
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 Text(
-                  'From the Himalayas to Kerala\'s backwaters,\nexplore the diversity of incredible India',
+                  'From the Himalayas to Kerala\'s backwaters,\nexplore incredible India',
                   style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.85),
                     height: 1.5,
                   ),
                 ),
@@ -541,16 +1582,19 @@ class _MainPageState extends State<MainPage> {
                   onPressed: () => setState(() => _selectedIndex = 1),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: darkPurple,
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    foregroundColor: primaryDeep,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 13,
+                    ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     elevation: 0,
                   ),
                   child: const Text(
                     'Start Exploring',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                   ),
                 ),
               ],
@@ -561,22 +1605,25 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Widget _buildBudgetHighlights() {
+  // ── BUDGET CARD (wide only) ───────────────────────────────────────────────
+  Widget _buildBudgetCard() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      height: 220,
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+            color: primaryDeep.withOpacity(0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -584,47 +1631,48 @@ class _MainPageState extends State<MainPage> {
               const Text(
                 'Budget Overview',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: darkPurple,
+                  color: textPrimary,
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
-                  vertical: 4,
+                  vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: lightPurple,
+                  color: primarySoft,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
                   'This Month',
-                  style: TextStyle(fontSize: 12, color: darkPurple),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: primary,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
           _buildBudgetItem(
             'Total Spent',
             '₹24,500',
             Icons.account_balance_wallet_rounded,
-            const Color(0xFFE57373),
+            accent,
           ),
-          const SizedBox(height: 16),
           _buildBudgetItem(
             'Saved',
             '₹5,000',
             Icons.savings_rounded,
-            const Color(0xFF81C784),
+            accentGreen,
           ),
-          const SizedBox(height: 16),
           _buildBudgetItem(
             'Upcoming',
             '₹12,000',
             Icons.event_rounded,
-            const Color(0xFFFFB74D),
+            accentAmber,
           ),
         ],
       ),
@@ -642,414 +1690,307 @@ class _MainPageState extends State<MainPage> {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: color, size: 22),
+          child: Icon(icon, color: color, size: 18),
         ),
         const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(fontSize: 12, color: textSecondary),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: textPrimary,
               ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildSearchBar() {
+  // ── BOTTOM NAV ────────────────────────────────────────────────────────────
+  Widget _buildBottomNav() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 20,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, -4),
           ),
         ],
       ),
-      child: TextField(
-        controller: _searchController,
-        decoration: InputDecoration(
-          hintText: 'Search destinations, cities, experiences...',
-          hintStyle: TextStyle(color: Colors.grey.shade500),
-          prefixIcon: Icon(Icons.search, color: primaryPurple),
-          suffixIcon: Container(
-            margin: const EdgeInsets.all(8),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: lightPurple,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.tune, color: darkPurple, size: 20),
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide.none,
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 18,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavTab(Icons.home_rounded, 'Home', 0),
+              _buildNavTab(Icons.explore_rounded, 'Explore', 1),
+              _buildNavTab(Icons.luggage_rounded, 'Community', 2),
+              _buildNavTab(Icons.bookmark_rounded, 'Saved', 3),
+              _buildNavTab(Icons.person_rounded, 'Profile', 4),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, {VoidCallback? onSeeAll}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: darkPurple,
-          ),
-        ),
-        TextButton.icon(
-          onPressed: onSeeAll,
-          icon: const Icon(Icons.arrow_forward, color: primaryPurple, size: 18),
-          label: const Text(
-            'See All',
-            style: TextStyle(color: primaryPurple, fontWeight: FontWeight.w600),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // --- Dynamic Grids ---
-
-  int _getCrossAxisCount(double width) {
-    if (width > 1200) return 4;
-    if (width > 900) return 3;
-    if (width > 600) return 2;
-    return 1; // Phone sizes get 1 column for better readability
-  }
-
-  double _getDestinationsAspectRatio(double width) {
-    if (width > 1200) return 0.85;
-    if (width > 900) return 0.8;
-    if (width > 600) return 0.75;
-    return 1.4; // Wide rectangular look for single column mobile
-  }
-
-  double _getTripsAspectRatio(double width) {
-    if (width > 1200) return 1.0;
-    if (width > 900) return 0.95;
-    if (width > 600) return 0.9;
-    return 1.5; // Wide rectangular look for single column mobile
-  }
-
-  Widget _buildDestinationsGrid(double screenWidth) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: _getCrossAxisCount(screenWidth),
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 20,
-        childAspectRatio: _getDestinationsAspectRatio(screenWidth),
-      ),
-      itemCount: _filteredDestinations.length,
-      itemBuilder: (context, index) {
-        final dest = _filteredDestinations[index];
-        return _buildDestinationCard(
-          dest['name']!,
-          dest['city']!,
-          dest['state']!,
-          dest['rating']!,
-          dest['cover']!,
-        );
-      },
-    );
-  }
-
-  Widget _buildDestinationCard(
-    String name,
-    String city,
-    String state,
-    String rating,
-    String cover,
-  ) {
+  Widget _buildNavTab(IconData icon, String label, int index) {
+    final isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DestinationDetailScreen(
-              name: name,
-              city: city,
-              state: state,
-              rating: rating,
-              coverImage: cover,
-            ),
-          ),
-        );
+        HapticFeedback.lightImpact();
+        setState(() => _selectedIndex = index);
       },
-      child: Container(
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 16 : 12,
+          vertical: 8,
+        ),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
+          color: isSelected ? primarySoft : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 22,
+              color: isSelected ? primary : Colors.grey.shade500,
             ),
+            if (isSelected) ...[
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 3,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [lightPurple, accentPurple.withOpacity(0.3)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+      ),
+    );
+  }
+
+  // ── SIDE NAV (wide) ───────────────────────────────────────────────────────
+  Widget _buildSideNav() {
+    return Container(
+      width: 230,
+      color: Colors.white,
+      child: Column(
+        children: [
+          const SizedBox(height: 48),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: primary,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
+                  child: const Icon(
+                    Icons.travel_explore,
+                    color: Colors.white,
+                    size: 22,
                   ),
                 ),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(16),
-                        ),
-                        child: Image.network(
-                          cover,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
+                const SizedBox(width: 11),
+                const Text(
+                  'GlobeTrotter',
+                  style: TextStyle(
+                    color: textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 36),
+          _buildSideNavItem(Icons.home_rounded, 'Home', 0),
+          _buildSideNavItem(Icons.explore_rounded, 'Explore', 1),
+          _buildSideNavItem(Icons.luggage_rounded, 'Community', 2),
+          _buildSideNavItem(Icons.bookmark_rounded, 'Saved', 3),
+          const Spacer(),
+          const Divider(indent: 20, endIndent: 20),
+          _buildSideNavItem(Icons.settings_rounded, 'Settings', 4),
+          _buildSideNavItem(Icons.help_outline_rounded, 'Help', 5),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSideNavItem(IconData icon, String label, int index) {
+    final isSelected = _selectedIndex == index;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      child: Material(
+        color: isSelected ? primarySoft : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => setState(() => _selectedIndex = index),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? primary : Colors.grey.shade500,
+                  size: 21,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected ? primary : Colors.grey.shade700,
+                    fontWeight: isSelected
+                        ? FontWeight.w700
+                        : FontWeight.normal,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── FAB ───────────────────────────────────────────────────────────────────
+  Widget _buildFAB() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        gradient: const LinearGradient(
+          colors: [primary, primaryDeep],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withOpacity(0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(30),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(30),
+          onTap: () async {
+            HapticFeedback.mediumImpact();
+            final result = await showCreateTripDialog(context);
+            if (result != null && mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(7),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 14,
-                              color: Colors.amber,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              rating,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: darkPurple,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
-                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
-                          Icons.favorite_border_rounded,
+                          Icons.check_circle_rounded,
+                          color: Colors.white,
                           size: 18,
-                          color: primaryPurple,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: Colors.black87,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              size: 14,
-                              color: Colors.grey.shade500,
+                            const Text(
+                              'Trip Created!',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
                             ),
-                            const SizedBox(width: 2),
-                            Expanded(
-                              child: Text(
-                                '$city, $state',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                            Text(
+                              result.tripName,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withOpacity(0.85),
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: lightPurple,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 16,
-                            color: darkPurple,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
+                  backgroundColor: primaryDeep,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  duration: const Duration(seconds: 3),
+                  action: SnackBarAction(
+                    label: 'VIEW',
+                    textColor: Colors.white,
+                    onPressed: () => setState(() => _selectedIndex = 1),
+                  ),
                 ),
-              ),
+              );
+            }
+          },
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.add_rounded, color: Colors.white, size: 22),
+                SizedBox(width: 8),
+                Text(
+                  'Plan Trip',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTripsGrid(double screenWidth) {
-    final trips = [
-      {
-        'name': 'Rajasthan Heritage Tour',
-        'place': 'Jaipur',
-        'date': 'Mar 2024',
-        'days': '7 days',
-        'status': 'Upcoming',
-        'image':
-            'https://upload.wikimedia.org/wikipedia/commons/3/37/Hawa_Mahal_2011.jpg',
-        'members': 4,
-      },
-      {
-        'name': 'Kerala Backwaters',
-        'place': 'Alleppey',
-        'date': 'Jan 2024',
-        'days': '5 days',
-        'status': 'Completed',
-        'image':
-            'https://upload.wikimedia.org/wikipedia/commons/4/4e/Kerala_backwaters%2C_Houseboats%2C_India.jpg',
-        'members': 2,
-      },
-      {
-        'name': 'Himalayan Trek',
-        'place': 'Manali',
-        'date': 'Dec 2023',
-        'days': '10 days',
-        'status': 'Completed',
-        'image':
-            'https://upload.wikimedia.org/wikipedia/commons/b/b0/Valley_of_flowers_%2829336158797%29.jpg',
-        'members': 6,
-      },
-      {
-        'name': 'Goa Beach Vacation',
-        'place': 'Panaji',
-        'date': 'Nov 2023',
-        'days': '4 days',
-        'status': 'Completed',
-        'image':
-            'https://upload.wikimedia.org/wikipedia/commons/3/3f/Palolem_Beach%2C_south_Goa.jpg',
-        'members': 3,
-      },
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: _getCrossAxisCount(screenWidth),
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 20,
-        childAspectRatio: _getTripsAspectRatio(screenWidth),
-      ),
-      itemCount: trips.length,
-      itemBuilder: (context, index) {
-        final trip = trips[index];
-        return GestureDetector(
-          onTap: () => _navigateToItinerary(trip),
-          child: _buildTripCard(
-            trip['name']! as String,
-            trip['place']! as String,
-            trip['date']! as String,
-            trip['days']! as String,
-            trip['status']! as String,
-            trip['image']! as String,
-            int.parse(trip['members'].toString()),
-          ),
-        );
-      },
-    );
-  }
-
+  // ── NAVIGATION ────────────────────────────────────────────────────────────
   void _navigateToItinerary(Map<String, dynamic> trip) {
-    // Keeping your custom trip navigation functionality
     final tripDetails = TripDetails(
       tripName: trip['name']!,
       place: trip['place']!,
@@ -1066,15 +2007,13 @@ class _MainPageState extends State<MainPage> {
           activities: [
             Activity(
               name: 'Morning Temple Visit',
-              description:
-                  'Visit the ancient temple and participate in morning prayers...',
+              description: 'Visit the ancient temple and participate...',
               expense: 500,
               time: '8:00 AM',
             ),
             Activity(
               name: 'City Tour',
-              description:
-                  'Explore major landmarks including historical monuments...',
+              description: 'Explore major landmarks...',
               expense: 1200,
               time: '11:00 AM',
             ),
@@ -1082,288 +2021,10 @@ class _MainPageState extends State<MainPage> {
         ),
       ],
     );
-
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ItineraryViewScreen(tripDetails: tripDetails),
-      ),
-    );
-  }
-
-  Widget _buildTripCard(
-    String name,
-    String place,
-    String date,
-    String days,
-    String status,
-    String imageUrl,
-    int members,
-  ) {
-    final isUpcoming = status == 'Upcoming';
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 3,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-              child: Stack(
-                children: [
-                  Image.network(
-                    imageUrl,
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: lightPurple,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                : null,
-                            color: primaryPurple,
-                          ),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: lightPurple,
-                        child: Center(
-                          child: Icon(
-                            Icons.photo_camera_rounded,
-                            size: 40,
-                            color: primaryPurple.withOpacity(0.4),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.3),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isUpcoming
-                            ? primaryPurple
-                            : Colors.grey.shade400,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        status,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.people,
-                            size: 12,
-                            color: primaryPurple,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '$members',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: darkPurple,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_outlined,
-                        size: 12,
-                        color: Colors.grey.shade500,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        place,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today_rounded,
-                        size: 12,
-                        color: Colors.grey.shade500,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$date • $days',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFAB() {
-    return FloatingActionButton.extended(
-      onPressed: () async {
-        final result = await showCreateTripDialog(context);
-        if (result != null) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.check_circle_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'Trip Created Successfully!',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                          Text(
-                            '${result.tripName}${result.activities.isNotEmpty ? ' • ${result.activities.length} activities' : ''}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.9),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                backgroundColor: primaryPurple,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: const EdgeInsets.all(16),
-                duration: const Duration(seconds: 4),
-                action: SnackBarAction(
-                  label: 'VIEW',
-                  textColor: Colors.white,
-                  onPressed: () => setState(() => _selectedIndex = 1),
-                ),
-              ),
-            );
-          }
-        }
-      },
-      backgroundColor: primaryPurple,
-      elevation: 4,
-      hoverElevation: 8,
-      icon: const Icon(Icons.add_rounded, color: Colors.white),
-      label: const Text(
-        'Plan New Trip',
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        builder: (_) => ItineraryViewScreen(tripDetails: tripDetails),
       ),
     );
   }
