@@ -69,6 +69,16 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
     {'name': 'Genuine Mink', 'image': 'assets/prev4.jpg'},
   ];
 
+  // Responsive breakpoints
+  static const double _mobileBreakpoint = 600;
+  static const double _tabletBreakpoint = 900;
+
+  bool _isMobile(BuildContext context) =>
+      MediaQuery.of(context).size.width < _mobileBreakpoint;
+  bool _isTablet(BuildContext context) =>
+      MediaQuery.of(context).size.width >= _mobileBreakpoint &&
+      MediaQuery.of(context).size.width < _tabletBreakpoint;
+
   @override
   void initState() {
     super.initState();
@@ -134,7 +144,15 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
   Future<void> _deleteAccount() async {
     AwesomeDialog(
       context: context,
-      dialogType: DialogType.warning,
+      dialogType: DialogType.noHeader,
+      customHeader: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red.shade100,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.warning_rounded, color: Colors.red, size: 48),
+      ),
       animType: AnimType.scale,
       title: 'Delete Account',
       titleTextStyle: GoogleFonts.inter(
@@ -162,7 +180,19 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
           Navigator.pop(context);
           AwesomeDialog(
             context: context,
-            dialogType: DialogType.success,
+            dialogType: DialogType.noHeader,
+            customHeader: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.green,
+                size: 48,
+              ),
+            ),
             animType: AnimType.scale,
             title: 'Account Deleted',
             desc: 'Your account has been successfully deleted.',
@@ -353,11 +383,13 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.white),
+            const Icon(Icons.check_circle, color: Colors.white),
             const SizedBox(width: 12),
-            Text(
-              message,
-              style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+            Flexible(
+              child: Text(
+                message,
+                style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+              ),
             ),
           ],
         ),
@@ -374,11 +406,13 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.error_outline, color: Colors.white),
+            const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 12),
-            Text(
-              message,
-              style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+            Flexible(
+              child: Text(
+                message,
+                style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+              ),
             ),
           ],
         ),
@@ -486,7 +520,19 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
 
                           AwesomeDialog(
                             context: context,
-                            dialogType: DialogType.success,
+                            dialogType: DialogType.noHeader,
+                            customHeader: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade100,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.check_circle_rounded,
+                                color: Colors.green,
+                                size: 48,
+                              ),
+                            ),
                             animType: AnimType.scale,
                             title: 'Success',
                             titleTextStyle: GoogleFonts.inter(
@@ -541,7 +587,15 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
   void _logout() {
     AwesomeDialog(
       context: context,
-      dialogType: DialogType.warning,
+      dialogType: DialogType.noHeader,
+      customHeader: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.orange.shade100,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.logout_rounded, color: Colors.orange, size: 48),
+      ),
       animType: AnimType.scale,
       title: 'Logout',
       titleTextStyle: GoogleFonts.inter(
@@ -577,138 +631,206 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = _isMobile(context);
+    final horizontalPadding = isMobile ? 16.0 : 40.0;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.person_outline, color: Colors.white, size: 26),
-            ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'My Profile',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    fontSize: 24,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                Text(
-                  'Manage your travel profile',
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        backgroundColor: widget.themeColor,
-        centerTitle: false,
-        elevation: 0,
-        toolbarHeight: 80,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 24),
-            child: Align(
-              alignment: Alignment.center,
-              child: ElevatedButton.icon(
-                onPressed: _logout,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white.withOpacity(0.2),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    side: BorderSide(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 1.5,
-                    ),
-                  ),
-                  elevation: 0,
-                ),
-                icon: const Icon(Icons.logout_rounded, size: 18),
-                label: Text(
-                  'Logout',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      appBar: _buildAppBar(isMobile),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(40, 40, 40, 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Profile Overview Section
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 1,
-                        child: SizedBox(
-                          height: 620,
-                          child: _buildEnhancedProfileCard(),
-                        ),
-                      ),
-                      const SizedBox(width: 28),
-                      Expanded(
-                        flex: 1,
-                        child: SizedBox(
-                          height: 620,
-                          child: _buildPersonalInformation(),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 48),
-                  // Statistics Cards
-                  _buildStatisticsSection(),
-                  const SizedBox(height: 56),
-                  // Preplanned Trips Section
-                  _buildPreplannedTripsSection(),
-                  const SizedBox(height: 56),
-                  // Previous Trips Section
-                  _buildPreviousTripsSection(),
-                  const SizedBox(height: 56),
-                  // Settings Section
-                  _buildSettingsSection(),
-                ],
-              ),
-            ),
-          ],
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            isMobile ? 20 : 40,
+            horizontalPadding,
+            isMobile ? 20 : 40,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildProfileOverviewSection(context),
+              SizedBox(height: isMobile ? 24 : 48),
+              _buildStatisticsSection(context),
+              SizedBox(height: isMobile ? 32 : 56),
+              _buildPreplannedTripsSection(context),
+              SizedBox(height: isMobile ? 32 : 56),
+              _buildPreviousTripsSection(context),
+              SizedBox(height: isMobile ? 32 : 56),
+              _buildSettingsSection(context),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildEnhancedProfileCard() {
+  PreferredSizeWidget _buildAppBar(bool isMobile) {
+    if (isMobile) {
+      return AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: widget.themeColor,
+        elevation: 0,
+        toolbarHeight: 64,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.person_outline,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'My Profile',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            onPressed: _logout,
+            icon: const Icon(Icons.logout_rounded, color: Colors.white),
+            tooltip: 'Logout',
+          ),
+          const SizedBox(width: 8),
+        ],
+      );
+    }
+
+    return AppBar(
+      automaticallyImplyLeading: false,
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.person_outline,
+              color: Colors.white,
+              size: 26,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'My Profile',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  fontSize: 24,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              Text(
+                'Manage your travel profile',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white.withOpacity(0.9),
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      backgroundColor: widget.themeColor,
+      centerTitle: false,
+      elevation: 0,
+      toolbarHeight: 80,
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 24),
+          child: Align(
+            alignment: Alignment.center,
+            child: ElevatedButton.icon(
+              onPressed: _logout,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.2),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1.5,
+                  ),
+                ),
+                elevation: 0,
+              ),
+              icon: const Icon(Icons.logout_rounded, size: 18),
+              label: Text(
+                'Logout',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileOverviewSection(BuildContext context) {
+    final isMobile = _isMobile(context);
+    final isTablet = _isTablet(context);
+
+    if (isMobile) {
+      // Stacked layout for mobile
+      return Column(
+        children: [
+          _buildEnhancedProfileCard(context),
+          const SizedBox(height: 20),
+          _buildPersonalInformation(context),
+        ],
+      );
+    }
+
+    // Side-by-side for tablet and desktop
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: isTablet ? 1 : 1,
+          child: _buildEnhancedProfileCard(context),
+        ),
+        const SizedBox(width: 28),
+        Expanded(
+          flex: isTablet ? 1 : 1,
+          child: _buildPersonalInformation(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedProfileCard(BuildContext context) {
+    final isMobile = _isMobile(context);
+    final avatarSize = isMobile ? 120.0 : 160.0;
+    final padding = isMobile ? 24.0 : 36.0;
+    final nameFontSize = isMobile ? 20.0 : 26.0;
+
     return Container(
-      padding: const EdgeInsets.all(36),
+      width: double.infinity,
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -730,8 +852,8 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
           Stack(
             children: [
               Container(
-                width: 160,
-                height: 160,
+                width: avatarSize,
+                height: avatarSize,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
@@ -763,7 +885,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                     child: _profileImagePath == null
                         ? Icon(
                             Icons.person,
-                            size: 80,
+                            size: avatarSize * 0.5,
                             color: widget.accentColor.withOpacity(0.5),
                           )
                         : null,
@@ -771,12 +893,12 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                 ),
               ),
               Positioned(
-                bottom: 8,
-                right: 8,
+                bottom: 4,
+                right: 4,
                 child: GestureDetector(
                   onTap: _pickImage,
                   child: Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: EdgeInsets.all(isMobile ? 10 : 14),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
@@ -793,9 +915,9 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                         ),
                       ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.camera_alt_rounded,
-                      size: 20,
+                      size: isMobile ? 16 : 20,
                       color: Colors.white,
                     ),
                   ),
@@ -803,11 +925,11 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
               ),
             ],
           ),
-          const SizedBox(height: 28),
+          SizedBox(height: isMobile ? 20 : 28),
           Text(
             nameController.text,
             style: GoogleFonts.poppins(
-              fontSize: 26,
+              fontSize: nameFontSize,
               fontWeight: FontWeight.w700,
               color: const Color(0xFF1A1A1A),
               letterSpacing: 0.3,
@@ -829,22 +951,26 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.email_outlined, size: 16, color: widget.accentColor),
-                const SizedBox(width: 8),
-                Text(
-                  emailController.text,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: widget.accentColor,
-                    fontWeight: FontWeight.w600,
+                Icon(Icons.email_outlined, size: 14, color: widget.accentColor),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    emailController.text,
+                    style: GoogleFonts.inter(
+                      fontSize: isMobile ? 12 : 14,
+                      color: widget.accentColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 36),
+          SizedBox(height: isMobile ? 24 : 36),
           Container(
-            padding: const EdgeInsets.all(24),
+            width: double.infinity,
+            padding: EdgeInsets.all(isMobile ? 16 : 24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -868,9 +994,9 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                   value: '12',
                   color: const Color(0xFF4CAF50),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 Divider(color: Colors.grey.shade200, thickness: 1.5),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 _buildStatItem(
                   icon: Icons.public_rounded,
                   label: 'Countries Visited',
@@ -930,50 +1056,86 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
     );
   }
 
-  Widget _buildStatisticsSection() {
+  Widget _buildStatisticsSection(BuildContext context) {
+    final isMobile = _isMobile(context);
+    _isTablet(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Travel Statistics',
           style: GoogleFonts.poppins(
-            fontSize: 22,
+            fontSize: isMobile ? 18 : 22,
             fontWeight: FontWeight.w700,
             color: const Color(0xFF1A1A1A),
             letterSpacing: 0.3,
           ),
         ),
         const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
+        // On mobile, stack stat cards vertically; on tablet/desktop, show in a row
+        if (isMobile)
+          Column(
+            children: [
+              _buildStatCard(
                 icon: Icons.calendar_today_rounded,
                 title: 'Member Since',
                 value: '2022',
                 color: const Color(0xFF9C27B0),
+                isMobile: true,
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildStatCard(
+              const SizedBox(height: 12),
+              _buildStatCard(
                 icon: Icons.favorite_rounded,
                 title: 'Favorite Type',
                 value: travelPreferenceController.text,
                 color: const Color(0xFFE91E63),
+                isMobile: true,
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildStatCard(
+              const SizedBox(height: 12),
+              _buildStatCard(
                 icon: Icons.bookmark_rounded,
                 title: 'Saved Places',
                 value: '${savedDestinations.length}',
                 color: const Color(0xFFFF9800),
+                isMobile: true,
               ),
-            ),
-          ],
-        ),
+            ],
+          )
+        else
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.calendar_today_rounded,
+                  title: 'Member Since',
+                  value: '2022',
+                  color: const Color(0xFF9C27B0),
+                  isMobile: false,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.favorite_rounded,
+                  title: 'Favorite Type',
+                  value: travelPreferenceController.text,
+                  color: const Color(0xFFE91E63),
+                  isMobile: false,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.bookmark_rounded,
+                  title: 'Saved Places',
+                  value: '${savedDestinations.length}',
+                  color: const Color(0xFFFF9800),
+                  isMobile: false,
+                ),
+              ),
+            ],
+          ),
       ],
     );
   }
@@ -983,9 +1145,11 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
     required String title,
     required String value,
     required Color color,
+    required bool isMobile,
   }) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      width: double.infinity,
+      padding: EdgeInsets.all(isMobile ? 16 : 24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -997,45 +1161,84 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+      child: isMobile
+          ? Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      value,
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1A1A1A),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 28),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  value,
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            child: Icon(icon, color: color, size: 28),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey.shade600,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF1A1A1A),
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
     );
   }
 
-  Widget _buildPersonalInformation() {
+  Widget _buildPersonalInformation(BuildContext context) {
+    final isMobile = _isMobile(context);
+
     return Container(
-      padding: const EdgeInsets.all(36),
+      width: double.infinity,
+      padding: EdgeInsets.all(isMobile ? 20 : 36),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -1047,86 +1250,86 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
           ),
         ],
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: widget.accentColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.person_outline_rounded,
-                    color: widget.accentColor,
-                    size: 24,
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: widget.accentColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                const SizedBox(width: 12),
-                Text(
+                child: Icon(
+                  Icons.person_outline_rounded,
+                  color: widget.accentColor,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Flexible(
+                child: Text(
                   'Personal Information',
                   style: GoogleFonts.poppins(
-                    fontSize: 22,
+                    fontSize: isMobile ? 18 : 22,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF1A1A1A),
                     letterSpacing: 0.3,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            _buildEditableField(
-              label: 'FULL NAME',
-              value: nameController.text,
-              controller: nameController,
-              hint: 'Enter your full name',
-              keyboardType: TextInputType.name,
-              icon: Icons.person_outline,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your name';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 24),
-            _buildEditableField(
-              label: 'EMAIL ADDRESS',
-              value: emailController.text,
-              controller: emailController,
-              hint: 'Enter your email',
-              keyboardType: TextInputType.emailAddress,
-              icon: Icons.email_outlined,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your email';
-                }
-                if (!isEmail(value)) {
-                  return 'Please enter a valid email';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 24),
-            _buildEditableField(
-              label: 'PHONE NUMBER',
-              value: phoneController.text,
-              controller: phoneController,
-              hint: 'Enter your phone number',
-              keyboardType: TextInputType.phone,
-              icon: Icons.phone_outlined,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your phone number';
-                }
-                return null;
-              },
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+          _buildEditableField(
+            label: 'FULL NAME',
+            value: nameController.text,
+            controller: nameController,
+            hint: 'Enter your full name',
+            keyboardType: TextInputType.name,
+            icon: Icons.person_outline,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your name';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          _buildEditableField(
+            label: 'EMAIL ADDRESS',
+            value: emailController.text,
+            controller: emailController,
+            hint: 'Enter your email',
+            keyboardType: TextInputType.emailAddress,
+            icon: Icons.email_outlined,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your email';
+              }
+              if (!isEmail(value)) {
+                return 'Please enter a valid email';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          _buildEditableField(
+            label: 'PHONE NUMBER',
+            value: phoneController.text,
+            controller: phoneController,
+            hint: 'Enter your phone number',
+            keyboardType: TextInputType.phone,
+            icon: Icons.phone_outlined,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your phone number';
+              }
+              return null;
+            },
+          ),
+        ],
       ),
     );
   }
@@ -1173,12 +1376,14 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                 child: Text(
                   value,
                   style: GoogleFonts.inter(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w500,
                     color: const Color(0xFF1A1A1A),
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: () => _editField(
                   label,
@@ -1208,7 +1413,9 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
     );
   }
 
-  Widget _buildPreplannedTripsSection() {
+  Widget _buildPreplannedTripsSection(BuildContext context) {
+    final isMobile = _isMobile(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1223,17 +1430,17 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                     color: const Color(0xFF2196F3).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.schedule_rounded,
-                    color: const Color(0xFF2196F3),
-                    size: 24,
+                    color: Color(0xFF2196F3),
+                    size: 22,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'Upcoming Trips',
                   style: GoogleFonts.poppins(
-                    fontSize: 22,
+                    fontSize: isMobile ? 18 : 22,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF1A1A1A),
                     letterSpacing: 0.3,
@@ -1243,13 +1450,13 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
             ),
             TextButton.icon(
               onPressed: () {},
-              icon: Icon(Icons.add_circle_outline, size: 18),
-              label: Text('Add Trip'),
+              icon: Icon(Icons.add_circle_outline, size: isMobile ? 16 : 18),
+              label: Text(isMobile ? 'Add' : 'Add Trip'),
               style: TextButton.styleFrom(
                 foregroundColor: widget.accentColor,
                 textStyle: GoogleFonts.inter(
                   fontWeight: FontWeight.w600,
-                  fontSize: 14,
+                  fontSize: isMobile ? 13 : 14,
                 ),
               ),
             ),
@@ -1262,10 +1469,11 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
             children: List.generate(
               preplanningTrips.length,
               (index) => Padding(
-                padding: const EdgeInsets.only(right: 20),
+                padding: const EdgeInsets.only(right: 16),
                 child: _buildEnhancedTripCard(
-                  preplanningTrips[index]['name'] ?? 'Yuva',
+                  preplanningTrips[index]['name'] ?? '',
                   true,
+                  isMobile,
                 ),
               ),
             ),
@@ -1275,7 +1483,9 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
     );
   }
 
-  Widget _buildPreviousTripsSection() {
+  Widget _buildPreviousTripsSection(BuildContext context) {
+    final isMobile = _isMobile(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1287,17 +1497,17 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                 color: const Color(0xFF4CAF50).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.check_circle_outline_rounded,
-                color: const Color(0xFF4CAF50),
-                size: 24,
+                color: Color(0xFF4CAF50),
+                size: 22,
               ),
             ),
             const SizedBox(width: 12),
             Text(
               'Completed Trips',
               style: GoogleFonts.poppins(
-                fontSize: 22,
+                fontSize: isMobile ? 18 : 22,
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF1A1A1A),
                 letterSpacing: 0.3,
@@ -1312,10 +1522,11 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
             children: List.generate(
               previousTrips.length,
               (index) => Padding(
-                padding: const EdgeInsets.only(right: 20),
+                padding: const EdgeInsets.only(right: 16),
                 child: _buildEnhancedTripCard(
                   previousTrips[index]['name'] ?? '',
                   false,
+                  isMobile,
                 ),
               ),
             ),
@@ -1325,10 +1536,17 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
     );
   }
 
-  Widget _buildEnhancedTripCard(String tripName, bool isUpcoming) {
+  Widget _buildEnhancedTripCard(
+    String tripName,
+    bool isUpcoming,
+    bool isMobile,
+  ) {
+    final cardWidth = isMobile ? 180.0 : 220.0;
+    final cardHeight = isMobile ? 200.0 : 240.0;
+
     return Container(
-      width: 220,
-      height: 240,
+      width: cardWidth,
+      height: cardHeight,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -1363,16 +1581,16 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                     Icon(
                       isUpcoming ? Icons.flight_takeoff : Icons.flight_land,
                       color: Colors.white,
-                      size: 48,
+                      size: isMobile ? 36 : 48,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
                         tripName,
                         textAlign: TextAlign.center,
                         style: GoogleFonts.poppins(
-                          fontSize: 14,
+                          fontSize: isMobile ? 12 : 14,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
@@ -1388,7 +1606,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
           Expanded(
             flex: 1,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -1396,17 +1614,20 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: widget.accentColor,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                     elevation: 0,
                   ),
-                  icon: Icon(Icons.visibility_outlined, size: 18),
+                  icon: Icon(
+                    Icons.visibility_outlined,
+                    size: isMobile ? 14 : 18,
+                  ),
                   label: Text(
                     'View Details',
                     style: GoogleFonts.inter(
-                      fontSize: 13,
+                      fontSize: isMobile ? 8 : 13,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1419,9 +1640,13 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
     );
   }
 
-  Widget _buildSettingsSection() {
+  Widget _buildSettingsSection(BuildContext context) {
+    final isMobile = _isMobile(context);
+    final padding = isMobile ? 20.0 : 36.0;
+
     return Container(
-      padding: const EdgeInsets.all(36),
+      width: double.infinity,
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -1452,28 +1677,30 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                 child: Icon(
                   Icons.settings_outlined,
                   color: widget.accentColor,
-                  size: 28,
+                  size: isMobile ? 22 : 28,
                 ),
               ),
               const SizedBox(width: 16),
-              Text(
-                'Settings & Preferences',
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1A1A1A),
-                  letterSpacing: 0.3,
+              Flexible(
+                child: Text(
+                  'Settings & Preferences',
+                  style: GoogleFonts.poppins(
+                    fontSize: isMobile ? 18 : 24,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1A1A1A),
+                    letterSpacing: 0.3,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 36),
+          const SizedBox(height: 28),
           // Language Preference
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [const Color(0xFFFAFAFA), Colors.white],
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFAFAFA), Colors.white],
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.grey.shade200, width: 1.5),
@@ -1491,7 +1718,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                       ),
                       child: Icon(
                         Icons.language_rounded,
-                        size: 20,
+                        size: 18,
                         color: widget.accentColor,
                       ),
                     ),
@@ -1499,7 +1726,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                     Text(
                       'LANGUAGE PREFERENCE',
                       style: GoogleFonts.inter(
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: Colors.grey.shade600,
                         letterSpacing: 1,
@@ -1507,11 +1734,11 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 6,
+                    horizontal: 16,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -1531,14 +1758,14 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                   child: DropdownButton<String>(
                     value: _selectedLanguage,
                     isExpanded: true,
-                    underline: Container(),
+                    underline: const SizedBox(),
                     icon: Icon(
                       Icons.keyboard_arrow_down_rounded,
                       color: widget.accentColor,
-                      size: 28,
+                      size: 26,
                     ),
                     style: GoogleFonts.inter(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF1A1A1A),
                     ),
@@ -1561,7 +1788,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                                   const SizedBox(width: 8),
                                   Icon(
                                     Icons.check_circle,
-                                    size: 18,
+                                    size: 16,
                                     color: widget.accentColor,
                                   ),
                                 ],
@@ -1583,17 +1810,16 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           // Location Toggle
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: const Color(0xFFFAFAFA),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.grey.shade200),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Column(
@@ -1603,7 +1829,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                         children: [
                           Icon(
                             Icons.location_on_outlined,
-                            size: 18,
+                            size: 16,
                             color: widget.accentColor,
                           ),
                           const SizedBox(width: 8),
@@ -1618,11 +1844,11 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Text(
                         'Allow location tracking for personalized recommendations',
                         style: GoogleFonts.inter(
-                          fontSize: 13,
+                          fontSize: 12,
                           color: Colors.grey.shade500,
                           height: 1.4,
                         ),
@@ -1630,7 +1856,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Switch(
                   value: isLocationOn,
                   onChanged: (value) {
@@ -1644,10 +1870,10 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           // Saved Destinations
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: const Color(0xFFFAFAFA),
               borderRadius: BorderRadius.circular(12),
@@ -1663,7 +1889,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                       children: [
                         Icon(
                           Icons.bookmark_outline_rounded,
-                          size: 18,
+                          size: 16,
                           color: widget.accentColor,
                         ),
                         const SizedBox(width: 8),
@@ -1682,23 +1908,24 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                       icon: Icon(
                         Icons.add_circle_outline,
                         color: widget.accentColor,
+                        size: 22,
                       ),
-                      onPressed: () {
-                        _showAddDestinationDialog();
-                      },
+                      onPressed: _showAddDestinationDialog,
                       tooltip: 'Add destination',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: savedDestinations.map((destination) {
                     return Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
+                        horizontal: 12,
+                        vertical: 8,
                       ),
                       decoration: BoxDecoration(
                         color: widget.accentColor.withOpacity(0.1),
@@ -1712,19 +1939,19 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                         children: [
                           Icon(
                             Icons.place,
-                            size: 16,
+                            size: 14,
                             color: widget.accentColor,
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 5),
                           Text(
                             destination,
                             style: GoogleFonts.inter(
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                               color: widget.accentColor,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                           InkWell(
                             onTap: () {
                               setState(() {
@@ -1734,7 +1961,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                             },
                             child: Icon(
                               Icons.close,
-                              size: 16,
+                              size: 14,
                               color: widget.accentColor.withOpacity(0.6),
                             ),
                           ),
@@ -1746,27 +1973,24 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           // Delete Account
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.red.shade50,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.red.shade200),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
+            child: isMobile
+                ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           Icon(
                             Icons.warning_amber_rounded,
-                            size: 18,
+                            size: 16,
                             color: Colors.red.shade600,
                           ),
                           const SizedBox(width: 8),
@@ -1785,40 +2009,101 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
                       Text(
                         'Permanently delete your account and all associated data',
                         style: GoogleFonts.inter(
-                          fontSize: 13,
+                          fontSize: 12,
                           color: Colors.red.shade400,
                           height: 1.4,
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _deleteAccount,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 0,
+                          ),
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          label: Text(
+                            'Delete Account',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.warning_amber_rounded,
+                                  size: 18,
+                                  color: Colors.red.shade600,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'DELETE ACCOUNT',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.red.shade600,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Permanently delete your account and all associated data',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: Colors.red.shade400,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton.icon(
+                        onPressed: _deleteAccount,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 0,
+                        ),
+                        icon: const Icon(Icons.delete_outline, size: 18),
+                        label: Text(
+                          'Delete',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: _deleteAccount,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    elevation: 0,
-                  ),
-                  icon: Icon(Icons.delete_outline, size: 18),
-                  label: Text(
-                    'Delete',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ],
       ),
