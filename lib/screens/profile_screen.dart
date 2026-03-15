@@ -146,7 +146,15 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
   Future<void> _deleteAccount() async {
     AwesomeDialog(
       context: context,
-      dialogType: DialogType.warning,
+      dialogType: DialogType.noHeader,
+      customHeader: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red.shade100,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.warning_rounded, color: Colors.red, size: 48),
+      ),
       animType: AnimType.scale,
       title: 'Delete Account',
       titleTextStyle: GoogleFonts.inter(
@@ -174,7 +182,19 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
           Navigator.pop(context);
           AwesomeDialog(
             context: context,
-            dialogType: DialogType.success,
+            dialogType: DialogType.noHeader,
+            customHeader: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.green,
+                size: 48,
+              ),
+            ),
             animType: AnimType.scale,
             title: 'Account Deleted',
             desc: 'Your account has been successfully deleted.',
@@ -502,7 +522,19 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
 
                           AwesomeDialog(
                             context: context,
-                            dialogType: DialogType.success,
+                            dialogType: DialogType.noHeader,
+                            customHeader: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade100,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.check_circle_rounded,
+                                color: Colors.green,
+                                size: 48,
+                              ),
+                            ),
                             animType: AnimType.scale,
                             title: 'Success',
                             titleTextStyle: GoogleFonts.inter(
@@ -557,7 +589,15 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
   void _logout() {
     AwesomeDialog(
       context: context,
-      dialogType: DialogType.warning,
+      dialogType: DialogType.noHeader,
+      customHeader: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.orange.shade100,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.logout_rounded, color: Colors.orange, size: 48),
+      ),
       animType: AnimType.scale,
       title: 'Logout',
       titleTextStyle: GoogleFonts.inter(
@@ -1433,7 +1473,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
               (index) => Padding(
                 padding: const EdgeInsets.only(right: 16),
                 child: _buildEnhancedTripCard(
-                  preplanningTrips[index]['name'] ?? 'Yuva',
+                  preplanningTrips[index]['name'] ?? '',
                   true,
                   isMobile,
                 ),
