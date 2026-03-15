@@ -139,12 +139,10 @@ class _MainPageState extends State<MainPage>
     super.initState();
     _searchController.addListener(_onSearchChanged);
     _filteredDestinations = _allDestinations;
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-      ),
-    );
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
   }
 
   @override
@@ -161,13 +159,11 @@ class _MainPageState extends State<MainPage>
       _filteredDestinations = query.isEmpty
           ? _allDestinations
           : _allDestinations
-                .where(
-                  (d) =>
-                      d['name']!.toLowerCase().contains(query) ||
-                      d['city']!.toLowerCase().contains(query) ||
-                      d['state']!.toLowerCase().contains(query),
-                )
-                .toList();
+              .where((d) =>
+                  d['name']!.toLowerCase().contains(query) ||
+                  d['city']!.toLowerCase().contains(query) ||
+                  d['state']!.toLowerCase().contains(query))
+              .toList();
     });
   }
 
@@ -193,8 +189,8 @@ class _MainPageState extends State<MainPage>
         ),
         floatingActionButton:
             (_selectedIndex == 0 || _selectedIndex == 1) && !isWide
-            ? _buildFAB()
-            : null,
+                ? _buildFAB()
+                : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
     );
@@ -228,6 +224,7 @@ class _MainPageState extends State<MainPage>
       slivers: [
         // ── HERO SLIVER APP BAR ──
         SliverAppBar(
+          automaticallyImplyLeading: false,
           pinned: true,
           expandedHeight: isWide ? 0 : 220,
           backgroundColor: Colors.white,
@@ -297,14 +294,16 @@ class _MainPageState extends State<MainPage>
             ? SliverPadding(
                 padding: EdgeInsets.symmetric(horizontal: hPad),
                 sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  gridDelegate:
+                      const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 300,
                     mainAxisSpacing: 20,
                     crossAxisSpacing: 20,
                     childAspectRatio: 0.82,
                   ),
                   delegate: SliverChildBuilderDelegate(
-                    (ctx, i) => _buildDestinationCard(_filteredDestinations[i]),
+                    (ctx, i) =>
+                        _buildDestinationCard(_filteredDestinations[i]),
                     childCount: _filteredDestinations.length,
                   ),
                 ),
@@ -313,10 +312,8 @@ class _MainPageState extends State<MainPage>
                 child: SizedBox(
                   height: 260,
                   child: ListView.separated(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: hPad,
-                      vertical: 4,
-                    ),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: hPad, vertical: 4),
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
                     itemCount: _filteredDestinations.length,
@@ -338,9 +335,11 @@ class _MainPageState extends State<MainPage>
         // ── TRIP CARDS ──
         isWide
             ? SliverPadding(
-                padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 100),
+                padding:
+                    EdgeInsets.fromLTRB(hPad, 0, hPad, 100),
                 sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  gridDelegate:
+                      const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 400,
                     mainAxisSpacing: 20,
                     crossAxisSpacing: 20,
@@ -426,11 +425,8 @@ class _MainPageState extends State<MainPage>
                               color: Colors.white.withOpacity(0.18),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Icon(
-                              Icons.travel_explore,
-                              color: Colors.white,
-                              size: 18,
-                            ),
+                            child: const Icon(Icons.travel_explore,
+                                color: Colors.white, size: 18),
                           ),
                           const SizedBox(width: 10),
                           const Text(
@@ -448,9 +444,7 @@ class _MainPageState extends State<MainPage>
                       Row(
                         children: [
                           _buildIconBtn(
-                            Icons.notifications_outlined,
-                            Colors.white,
-                          ),
+                              Icons.notifications_outlined, Colors.white),
                           const SizedBox(width: 8),
                           GestureDetector(
                             onTap: () => Navigator.push(
@@ -468,20 +462,16 @@ class _MainPageState extends State<MainPage>
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.5),
-                                  width: 2,
-                                ),
+                                    color: Colors.white.withOpacity(0.5),
+                                    width: 2),
                                 color: Colors.white.withOpacity(0.2),
                               ),
                               child: const Center(
-                                child: Text(
-                                  'RD',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
+                                child: Text('RD',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12)),
                               ),
                             ),
                           ),
@@ -532,20 +522,16 @@ class _MainPageState extends State<MainPage>
                     color: primary,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(
-                    Icons.travel_explore,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  child: const Icon(Icons.travel_explore,
+                      color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 10),
                 const Text(
                   'GlobeTrotter',
                   style: TextStyle(
-                    color: textPrimary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18,
-                  ),
+                      color: textPrimary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18),
                 ),
               ],
             ),
@@ -563,10 +549,8 @@ class _MainPageState extends State<MainPage>
                 ),
               ),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 7,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
                   color: primarySoft,
                   borderRadius: BorderRadius.circular(30),
@@ -576,24 +560,18 @@ class _MainPageState extends State<MainPage>
                     CircleAvatar(
                       radius: 14,
                       backgroundColor: primary,
-                      child: Text(
-                        'RD',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
-                      ),
+                      child: Text('RD',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10)),
                     ),
                     SizedBox(width: 8),
-                    Text(
-                      'Rahul D.',
-                      style: TextStyle(
-                        color: textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
+                    Text('Rahul D.',
+                        style: TextStyle(
+                            color: textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13)),
                   ],
                 ),
               ),
@@ -628,19 +606,14 @@ class _MainPageState extends State<MainPage>
         const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Explore India',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: textPrimary,
-              ),
-            ),
+            Text('Explore India',
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: textPrimary)),
             SizedBox(height: 4),
-            Text(
-              '4 trips planned this year',
-              style: TextStyle(fontSize: 13, color: textSecondary),
-            ),
+            Text('4 trips planned this year',
+                style: TextStyle(fontSize: 13, color: textSecondary)),
           ],
         ),
         Container(
@@ -653,14 +626,11 @@ class _MainPageState extends State<MainPage>
             children: [
               Icon(Icons.calendar_today_rounded, size: 14, color: primary),
               SizedBox(width: 6),
-              Text(
-                '2024',
-                style: TextStyle(
-                  color: primary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
+              Text('2024',
+                  style: TextStyle(
+                      color: primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13)),
             ],
           ),
         ),
@@ -673,41 +643,22 @@ class _MainPageState extends State<MainPage>
     return Row(
       children: [
         Expanded(
-          child: _buildStatChip(
-            '₹24.5K',
-            'Spent',
-            accent,
-            Icons.account_balance_wallet_rounded,
-          ),
-        ),
+            child: _buildStatChip('₹24.5K', 'Spent', accent,
+                Icons.account_balance_wallet_rounded)),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildStatChip(
-            '₹5K',
-            'Saved',
-            accentGreen,
-            Icons.savings_rounded,
-          ),
-        ),
+            child: _buildStatChip(
+                '₹5K', 'Saved', accentGreen, Icons.savings_rounded)),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildStatChip(
-            '₹12K',
-            'Upcoming',
-            accentAmber,
-            Icons.event_rounded,
-          ),
-        ),
+            child: _buildStatChip(
+                '₹12K', 'Upcoming', accentAmber, Icons.event_rounded)),
       ],
     );
   }
 
   Widget _buildStatChip(
-    String value,
-    String label,
-    Color color,
-    IconData icon,
-  ) {
+      String value, String label, Color color, IconData icon) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
       decoration: BoxDecoration(
@@ -733,19 +684,14 @@ class _MainPageState extends State<MainPage>
             child: Icon(icon, color: color, size: 16),
           ),
           const SizedBox(height: 10),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
-              color: textPrimary,
-            ),
-          ),
+          Text(value,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  color: textPrimary)),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11, color: textSecondary),
-          ),
+          Text(label,
+              style: const TextStyle(fontSize: 11, color: textSecondary)),
         ],
       ),
     );
@@ -774,19 +720,13 @@ class _MainPageState extends State<MainPage>
             prefixIcon: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Icon(
-                Icons.search_rounded,
-                color: _isSearchFocused ? primary : textSecondary,
-                size: 22,
-              ),
+              child: Icon(Icons.search_rounded,
+                  color: _isSearchFocused ? primary : textSecondary, size: 22),
             ),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(
-                      Icons.close_rounded,
-                      color: textSecondary,
-                      size: 18,
-                    ),
+                    icon: const Icon(Icons.close_rounded,
+                        color: textSecondary, size: 18),
                     onPressed: () {
                       _searchController.clear();
                       FocusScope.of(context).unfocus();
@@ -798,11 +738,8 @@ class _MainPageState extends State<MainPage>
                       color: primarySoft,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
-                      Icons.tune_rounded,
-                      color: primary,
-                      size: 18,
-                    ),
+                    child: const Icon(Icons.tune_rounded,
+                        color: primary, size: 18),
                   ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
@@ -814,10 +751,8 @@ class _MainPageState extends State<MainPage>
             ),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: 18,
-              horizontal: 4,
-            ),
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 18, horizontal: 4),
           ),
         ),
       ),
@@ -829,32 +764,27 @@ class _MainPageState extends State<MainPage>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: textPrimary,
-            letterSpacing: -0.3,
-          ),
-        ),
+        Text(title,
+            style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: textPrimary,
+                letterSpacing: -0.3)),
         if (onSeeAll != null)
           GestureDetector(
             onTap: onSeeAll,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: primarySoft,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Text(
-                'See all',
-                style: TextStyle(
-                  color: primary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
-              ),
+              child: const Text('See all',
+                  style: TextStyle(
+                      color: primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12)),
             ),
           ),
       ],
@@ -902,19 +832,13 @@ class _MainPageState extends State<MainPage>
                     tag: 'dest_img_${dest['name']}',
                     child: ClipRRect(
                       borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(22),
-                      ),
-                      child: Image.network(
-                        dest['cover']!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: primarySoft,
-                          child: const Icon(
-                            Icons.image_outlined,
-                            color: primary,
-                          ),
-                        ),
-                      ),
+                          top: Radius.circular(22)),
+                      child: Image.network(dest['cover']!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                              color: primarySoft,
+                              child: const Icon(Icons.image_outlined,
+                                  color: primary))),
                     ),
                   ),
                   // Tag badge
@@ -923,21 +847,16 @@ class _MainPageState extends State<MainPage>
                     left: 12,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 4,
-                      ),
+                          horizontal: 9, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.45),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
-                        dest['tag'] ?? '',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: Text(dest['tag'] ?? '',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600)),
                     ),
                   ),
                   // Rating badge
@@ -946,9 +865,7 @@ class _MainPageState extends State<MainPage>
                     right: 12,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.95),
                         borderRadius: BorderRadius.circular(20),
@@ -956,20 +873,14 @@ class _MainPageState extends State<MainPage>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            size: 12,
-                            color: accentAmber,
-                          ),
+                          const Icon(Icons.star_rounded,
+                              size: 12, color: accentAmber),
                           const SizedBox(width: 3),
-                          Text(
-                            dest['rating']!,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: textPrimary,
-                            ),
-                          ),
+                          Text(dest['rating']!,
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: textPrimary)),
                         ],
                       ),
                     ),
@@ -979,8 +890,7 @@ class _MainPageState extends State<MainPage>
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(22),
-                        ),
+                            top: Radius.circular(22)),
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -1000,43 +910,31 @@ class _MainPageState extends State<MainPage>
             Expanded(
               flex: 3,
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      dest['name']!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    Text(dest['name']!,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: textPrimary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(
-                          Icons.location_on_rounded,
-                          size: 12,
-                          color: textSecondary,
-                        ),
+                        const Icon(Icons.location_on_rounded,
+                            size: 12, color: textSecondary),
                         const SizedBox(width: 3),
                         Expanded(
-                          child: Text(
-                            '${dest['city']}, ${dest['state']}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: textSecondary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          child: Text('${dest['city']}, ${dest['state']}',
+                              style: const TextStyle(
+                                  fontSize: 11, color: textSecondary),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
                         ),
                       ],
                     ),
@@ -1075,10 +973,9 @@ class _MainPageState extends State<MainPage>
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: primaryDeep.withOpacity(0.06),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
+                  color: primaryDeep.withOpacity(0.06),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8))
             ],
           ),
           child: Column(
@@ -1086,75 +983,57 @@ class _MainPageState extends State<MainPage>
             children: [
               Expanded(
                 flex: 5,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Hero(
-                      tag: 'dest_img_${dest['name']}',
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                        child: Image.network(dest['cover']!, fit: BoxFit.cover),
-                      ),
+                child: Stack(fit: StackFit.expand, children: [
+                  Hero(
+                    tag: 'dest_img_${dest['name']}',
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(20)),
+                      child: Image.network(dest['cover']!, fit: BoxFit.cover),
                     ),
-                    Positioned(
-                      top: 14,
-                      left: 14,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.4),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          dest['tag'] ?? '',
+                  ),
+                  Positioned(
+                    top: 14,
+                    left: 14,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(dest['tag'] ?? '',
                           style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600)),
                     ),
-                    Positioned(
-                      top: 14,
-                      right: 14,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
+                  ),
+                  Positioned(
+                    top: 14,
+                    right: 14,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.95),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 14,
-                              color: accentAmber,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              dest['rating']!,
+                          borderRadius: BorderRadius.circular(30)),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.star_rounded,
+                              size: 14, color: accentAmber),
+                          const SizedBox(width: 4),
+                          Text(dest['rating']!,
                               style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: textPrimary)),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ]),
               ),
               Expanded(
                 flex: 3,
@@ -1167,35 +1046,26 @@ class _MainPageState extends State<MainPage>
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            dest['name']!,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          Text(dest['name']!,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: textPrimary),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
                           const SizedBox(height: 5),
                           Row(
                             children: [
-                              const Icon(
-                                Icons.location_on_rounded,
-                                size: 13,
-                                color: textSecondary,
-                              ),
+                              const Icon(Icons.location_on_rounded,
+                                  size: 13, color: textSecondary),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
-                                  '${dest['city']}, ${dest['state']}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: textSecondary,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                    '${dest['city']}, ${dest['state']}',
+                                    style: const TextStyle(
+                                        fontSize: 12, color: textSecondary),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis),
                               ),
                             ],
                           ),
@@ -1206,14 +1076,10 @@ class _MainPageState extends State<MainPage>
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: primarySoft,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 16,
-                            color: primary,
-                          ),
+                              color: primarySoft,
+                              borderRadius: BorderRadius.circular(12)),
+                          child: const Icon(Icons.arrow_forward_rounded,
+                              size: 16, color: primary),
                         ),
                       ),
                     ],
@@ -1239,10 +1105,9 @@ class _MainPageState extends State<MainPage>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: primaryDeep.withOpacity(0.06),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
+                color: primaryDeep.withOpacity(0.06),
+                blurRadius: 20,
+                offset: const Offset(0, 4))
           ],
         ),
         child: Row(
@@ -1250,26 +1115,23 @@ class _MainPageState extends State<MainPage>
             // Image
             ClipRRect(
               borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(20),
-              ),
+                  left: Radius.circular(20)),
               child: SizedBox(
                 width: 110,
                 height: double.infinity,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.network(
-                      trip['image']!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          Container(color: primarySoft),
-                    ),
+                    Image.network(trip['image']!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            Container(color: primarySoft)),
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
                             Colors.black.withOpacity(0.25),
-                            Colors.transparent,
+                            Colors.transparent
                           ],
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
@@ -1283,10 +1145,8 @@ class _MainPageState extends State<MainPage>
             // Info
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1294,38 +1154,30 @@ class _MainPageState extends State<MainPage>
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            trip['name']!,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                              color: textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          child: Text(trip['name']!,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: textPrimary),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 9,
-                            vertical: 3,
-                          ),
+                              horizontal: 9, vertical: 3),
                           decoration: BoxDecoration(
                             color: isUpcoming
                                 ? primary.withOpacity(0.12)
                                 : Colors.grey.shade100,
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Text(
-                            trip['status']!,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: isUpcoming
-                                  ? primary
-                                  : Colors.grey.shade500,
-                            ),
-                          ),
+                          child: Text(trip['status']!,
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: isUpcoming
+                                      ? primary
+                                      : Colors.grey.shade500)),
                         ),
                       ],
                     ),
@@ -1334,52 +1186,32 @@ class _MainPageState extends State<MainPage>
                       children: [
                         Row(
                           children: [
-                            const Icon(
-                              Icons.location_on_rounded,
-                              size: 12,
-                              color: textSecondary,
-                            ),
+                            const Icon(Icons.location_on_rounded,
+                                size: 12, color: textSecondary),
                             const SizedBox(width: 4),
-                            Text(
-                              trip['place']!,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: textSecondary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                            Text(trip['place']!,
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: textSecondary,
+                                    fontWeight: FontWeight.w500)),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(
-                              Icons.calendar_month_rounded,
-                              size: 12,
-                              color: textSecondary,
-                            ),
+                            const Icon(Icons.calendar_month_rounded,
+                                size: 12, color: textSecondary),
                             const SizedBox(width: 4),
-                            Text(
-                              '${trip['date']} · ${trip['days']}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: textSecondary,
-                              ),
-                            ),
+                            Text('${trip['date']} · ${trip['days']}',
+                                style: const TextStyle(
+                                    fontSize: 12, color: textSecondary)),
                             const SizedBox(width: 10),
-                            const Icon(
-                              Icons.group_rounded,
-                              size: 12,
-                              color: textSecondary,
-                            ),
+                            const Icon(Icons.group_rounded,
+                                size: 12, color: textSecondary),
                             const SizedBox(width: 4),
-                            Text(
-                              '${trip['members']}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: textSecondary,
-                              ),
-                            ),
+                            Text('${trip['members']}',
+                                style: const TextStyle(
+                                    fontSize: 12, color: textSecondary)),
                           ],
                         ),
                       ],
@@ -1390,11 +1222,8 @@ class _MainPageState extends State<MainPage>
             ),
             const Padding(
               padding: EdgeInsets.only(right: 14),
-              child: Icon(
-                Icons.chevron_right_rounded,
-                color: textSecondary,
-                size: 20,
-              ),
+              child: Icon(Icons.chevron_right_rounded,
+                  color: textSecondary, size: 20),
             ),
           ],
         ),
@@ -1416,10 +1245,9 @@ class _MainPageState extends State<MainPage>
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: primaryDeep.withOpacity(0.06),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
+                  color: primaryDeep.withOpacity(0.06),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8))
             ],
           ),
           child: Column(
@@ -1427,55 +1255,45 @@ class _MainPageState extends State<MainPage>
             children: [
               Expanded(
                 flex: 4,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    ClipRRect(
+                child: Stack(fit: StackFit.expand, children: [
+                  ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(20)),
+                    child: Image.network(trip['image']!, fit: BoxFit.cover),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
                       borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(20),
+                          top: Radius.circular(20)),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.3),
+                          Colors.transparent,
+                        ],
                       ),
-                      child: Image.network(trip['image']!, fit: BoxFit.cover),
                     ),
-                    Container(
+                  ),
+                  Positioned(
+                    top: 14,
+                    right: 14,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withOpacity(0.3),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 14,
-                      right: 14,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isUpcoming ? primary : Colors.grey.shade600,
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Text(
-                          trip['status']!,
+                          color:
+                              isUpcoming ? primary : Colors.grey.shade600,
+                          borderRadius: BorderRadius.circular(30)),
+                      child: Text(trip['status']!,
                           style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 0.5)),
                     ),
-                  ],
-                ),
+                  ),
+                ]),
               ),
               Expanded(
                 flex: 3,
@@ -1485,34 +1303,22 @@ class _MainPageState extends State<MainPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        trip['name']!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: textPrimary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      Text(trip['name']!,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: textPrimary),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.calendar_month_rounded,
-                            size: 13,
-                            color: textSecondary,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            '${trip['date']} · ${trip['days']}',
+                      Row(children: [
+                        const Icon(Icons.calendar_month_rounded,
+                            size: 13, color: textSecondary),
+                        const SizedBox(width: 5),
+                        Text('${trip['date']} · ${trip['days']}',
                             style: const TextStyle(
-                              fontSize: 12,
-                              color: textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
+                                fontSize: 12, color: textSecondary)),
+                      ]),
                     ],
                   ),
                 ),
@@ -1530,17 +1336,15 @@ class _MainPageState extends State<MainPage>
       height: 220,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [primary, primaryDeep],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+            colors: [primary, primaryDeep],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: primaryDeep.withOpacity(0.2),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
+              color: primaryDeep.withOpacity(0.2),
+              blurRadius: 24,
+              offset: const Offset(0, 12))
         ],
       ),
       child: Stack(
@@ -1548,11 +1352,8 @@ class _MainPageState extends State<MainPage>
           Positioned(
             right: -20,
             bottom: -30,
-            child: Icon(
-              Icons.flight_takeoff_rounded,
-              size: 150,
-              color: Colors.white.withOpacity(0.08),
-            ),
+            child: Icon(Icons.flight_takeoff_rounded,
+                size: 150, color: Colors.white.withOpacity(0.08)),
           ),
           Padding(
             padding: const EdgeInsets.all(28),
@@ -1560,23 +1361,18 @@ class _MainPageState extends State<MainPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'Discover India',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                const Text('Discover India',
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
                 const SizedBox(height: 10),
                 Text(
-                  'From the Himalayas to Kerala\'s backwaters,\nexplore incredible India',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.85),
-                    height: 1.5,
-                  ),
-                ),
+                    'From the Himalayas to Kerala\'s backwaters,\nexplore incredible India',
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.85),
+                        height: 1.5)),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () => setState(() => _selectedIndex = 1),
@@ -1584,18 +1380,14 @@ class _MainPageState extends State<MainPage>
                     backgroundColor: Colors.white,
                     foregroundColor: primaryDeep,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 13,
-                    ),
+                        horizontal: 24, vertical: 13),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'Start Exploring',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                  ),
+                  child: const Text('Start Exploring',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 14)),
                 ),
               ],
             ),
@@ -1615,10 +1407,9 @@ class _MainPageState extends State<MainPage>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: primaryDeep.withOpacity(0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
+              color: primaryDeep.withOpacity(0.04),
+              blurRadius: 24,
+              offset: const Offset(0, 8))
         ],
       ),
       child: Column(
@@ -1628,90 +1419,59 @@ class _MainPageState extends State<MainPage>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Budget Overview',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: textPrimary,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: primarySoft,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'This Month',
+              const Text('Budget Overview',
                   style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: primary,
-                  ),
-                ),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary)),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                    color: primarySoft,
+                    borderRadius: BorderRadius.circular(20)),
+                child: const Text('This Month',
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: primary)),
               ),
             ],
           ),
+          _buildBudgetItem('Total Spent', '₹24,500',
+              Icons.account_balance_wallet_rounded, accent),
           _buildBudgetItem(
-            'Total Spent',
-            '₹24,500',
-            Icons.account_balance_wallet_rounded,
-            accent,
-          ),
+              'Saved', '₹5,000', Icons.savings_rounded, accentGreen),
           _buildBudgetItem(
-            'Saved',
-            '₹5,000',
-            Icons.savings_rounded,
-            accentGreen,
-          ),
-          _buildBudgetItem(
-            'Upcoming',
-            '₹12,000',
-            Icons.event_rounded,
-            accentAmber,
-          ),
+              'Upcoming', '₹12,000', Icons.event_rounded, accentAmber),
         ],
       ),
     );
   }
 
   Widget _buildBudgetItem(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+      String label, String value, IconData icon, Color color) {
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12)),
           child: Icon(icon, color: color, size: 18),
         ),
         const SizedBox(width: 14),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              style: const TextStyle(fontSize: 12, color: textSecondary),
-            ),
+            Text(label,
+                style: const TextStyle(fontSize: 12, color: textSecondary)),
             const SizedBox(height: 2),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: textPrimary,
-              ),
-            ),
+            Text(value,
+                style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary)),
           ],
         ),
       ],
@@ -1725,10 +1485,9 @@ class _MainPageState extends State<MainPage>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 20,
+              offset: const Offset(0, -4))
         ],
       ),
       child: SafeArea(
@@ -1761,9 +1520,7 @@ class _MainPageState extends State<MainPage>
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOut,
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 16 : 12,
-          vertical: 8,
-        ),
+            horizontal: isSelected ? 16 : 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? primarySoft : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
@@ -1771,21 +1528,16 @@ class _MainPageState extends State<MainPage>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 22,
-              color: isSelected ? primary : Colors.grey.shade500,
-            ),
+            Icon(icon,
+                size: 22,
+                color: isSelected ? primary : Colors.grey.shade500),
             if (isSelected) ...[
               const SizedBox(width: 6),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: primary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
-              ),
+              Text(label,
+                  style: const TextStyle(
+                      color: primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12)),
             ],
           ],
         ),
@@ -1808,24 +1560,17 @@ class _MainPageState extends State<MainPage>
                 Container(
                   padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
-                    color: primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.travel_explore,
-                    color: Colors.white,
-                    size: 22,
-                  ),
+                      color: primary,
+                      borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.travel_explore,
+                      color: Colors.white, size: 22),
                 ),
                 const SizedBox(width: 11),
-                const Text(
-                  'GlobeTrotter',
-                  style: TextStyle(
-                    color: textPrimary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
-                ),
+                const Text('GlobeTrotter',
+                    style: TextStyle(
+                        color: textPrimary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16)),
               ],
             ),
           ),
@@ -1855,25 +1600,23 @@ class _MainPageState extends State<MainPage>
           borderRadius: BorderRadius.circular(12),
           onTap: () => setState(() => _selectedIndex = index),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                Icon(
-                  icon,
-                  color: isSelected ? primary : Colors.grey.shade500,
-                  size: 21,
-                ),
+                Icon(icon,
+                    color: isSelected ? primary : Colors.grey.shade500,
+                    size: 21),
                 const SizedBox(width: 12),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: isSelected ? primary : Colors.grey.shade700,
-                    fontWeight: isSelected
-                        ? FontWeight.w700
-                        : FontWeight.normal,
-                    fontSize: 14,
-                  ),
-                ),
+                Text(label,
+                    style: TextStyle(
+                        color: isSelected
+                            ? primary
+                            : Colors.grey.shade700,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.normal,
+                        fontSize: 14)),
               ],
             ),
           ),
@@ -1894,10 +1637,9 @@ class _MainPageState extends State<MainPage>
         ),
         boxShadow: [
           BoxShadow(
-            color: primary.withOpacity(0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
+              color: primary.withOpacity(0.4),
+              blurRadius: 20,
+              offset: const Offset(0, 8)),
         ],
       ),
       child: Material(
@@ -1916,14 +1658,10 @@ class _MainPageState extends State<MainPage>
                       Container(
                         padding: const EdgeInsets.all(7),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.check_circle_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8)),
+                        child: const Icon(Icons.check_circle_rounded,
+                            color: Colors.white, size: 18),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -1931,20 +1669,15 @@ class _MainPageState extends State<MainPage>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text(
-                              'Trip Created!',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            Text(
-                              result.tripName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white.withOpacity(0.85),
-                              ),
-                            ),
+                            const Text('Trip Created!',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14)),
+                            Text(result.tripName,
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color:
+                                        Colors.white.withOpacity(0.85))),
                           ],
                         ),
                       ),
@@ -1953,34 +1686,32 @@ class _MainPageState extends State<MainPage>
                   backgroundColor: primaryDeep,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+                      borderRadius: BorderRadius.circular(14)),
                   margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   duration: const Duration(seconds: 3),
                   action: SnackBarAction(
                     label: 'VIEW',
                     textColor: Colors.white,
-                    onPressed: () => setState(() => _selectedIndex = 1),
+                    onPressed: () =>
+                        setState(() => _selectedIndex = 1),
                   ),
                 ),
               );
             }
           },
           child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+            padding:
+                EdgeInsets.symmetric(horizontal: 22, vertical: 14),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.add_rounded, color: Colors.white, size: 22),
                 SizedBox(width: 8),
-                Text(
-                  'Plan Trip',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
+                Text('Plan Trip',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15)),
               ],
             ),
           ),
@@ -2024,8 +1755,7 @@ class _MainPageState extends State<MainPage>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ItineraryViewScreen(tripDetails: tripDetails),
-      ),
+          builder: (_) => ItineraryViewScreen(tripDetails: tripDetails)),
     );
   }
 }
