@@ -111,109 +111,143 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth > 900;
-    final contentMaxWidth = isWideScreen ? 1200.0 : screenWidth;
-
-    // Show Calendar View when Explore (index 1) is selected
-    if (_selectedIndex == 1) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF8F7FA),
-        body: Row(
-          children: [
-            if (isWideScreen) _buildSideNav(),
-            const Expanded(child: CalendarViewScreen()),
-          ],
-        ),
-        floatingActionButton: _buildFAB(),
-      );
-    }
-
-    // Show Community Page when Community (index 2) is selected
-    if (_selectedIndex == 2) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF8F7FA),
-        body: Row(
-          children: [
-            if (isWideScreen) _buildSideNav(),
-            const Expanded(child: CommunityPage()),
-          ],
-        ),
-      );
-    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F7FA),
+      // Mobile Bottom Navigation
+      bottomNavigationBar: !isWideScreen ? _buildBottomNavBar() : null,
+      // Main Body Row
       body: Row(
         children: [
           // Side Navigation for Web
           if (isWideScreen) _buildSideNav(),
 
-          // Main Content
-          Expanded(
-            child: Column(
-              children: [
-                _buildTopBar(isWideScreen),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Center(
-                      child: Container(
-                        constraints: BoxConstraints(maxWidth: contentMaxWidth),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isWideScreen ? 40.0 : 20.0,
-                          vertical: 24.0,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildWelcomeSection(),
-                            const SizedBox(height: 32),
-                            if (isWideScreen)
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: _buildBannerSection(),
-                                  ),
-                                  const SizedBox(width: 24),
-                                  Expanded(child: _buildBudgetHighlights()),
-                                ],
-                              )
-                            else ...[
-                              _buildBannerSection(),
-                              const SizedBox(height: 24),
-                              _buildBudgetHighlights(),
-                            ],
-                            const SizedBox(height: 32),
-                            _buildSearchBar(),
-                            const SizedBox(height: 32),
-                            _buildSectionHeader(
-                              _searchController.text.isEmpty
-                                  ? 'Popular Destinations in India'
-                                  : 'Search Results',
-                              onSeeAll: () {},
-                            ),
-                            const SizedBox(height: 20),
-                            _buildDestinationsGrid(isWideScreen),
-                            const SizedBox(height: 40),
-                            _buildSectionHeader(
-                              'Your Recent Trips',
-                              onSeeAll: () {},
-                            ),
-                            const SizedBox(height: 20),
-                            _buildTripsGrid(isWideScreen),
-                            const SizedBox(height: 40),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // Dynamic Main Content Area
+          Expanded(child: _buildMainContent(isWideScreen, screenWidth)),
         ],
       ),
-      floatingActionButton: _buildFAB(),
+      // Only show FAB on specific tabs
+      floatingActionButton: (_selectedIndex == 0 || _selectedIndex == 1)
+          ? _buildFAB()
+          : null,
+    );
+  }
+
+  // --- Layout Selection ---
+
+  Widget _buildMainContent(bool isWideScreen, double screenWidth) {
+    // Switcher for different tabs to maintain the unified Scaffold
+    switch (_selectedIndex) {
+      case 1:
+        return const CalendarViewScreen();
+      case 2:
+        return const CommunityPage();
+      case 3:
+        return const Center(child: Text('Saved Destinations (Coming Soon)'));
+      case 4:
+        return ProfileSettingsPageWeb(
+          themeColor: primaryPurple,
+          accentColor: accentPurple,
+        );
+      case 0:
+      default:
+        return _buildHomePage(isWideScreen, screenWidth);
+    }
+  }
+
+  Widget _buildHomePage(bool isWideScreen, double screenWidth) {
+    final contentMaxWidth = isWideScreen ? 1200.0 : screenWidth;
+
+    return Column(
+      children: [
+        _buildTopBar(isWideScreen),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: contentMaxWidth),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isWideScreen ? 40.0 : 20.0,
+                  vertical: 24.0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildWelcomeSection(),
+                    const SizedBox(height: 32),
+                    if (isWideScreen)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(flex: 2, child: _buildBannerSection()),
+                          const SizedBox(width: 24),
+                          Expanded(child: _buildBudgetHighlights()),
+                        ],
+                      )
+                    else ...[
+                      _buildBannerSection(),
+                      const SizedBox(height: 24),
+                      _buildBudgetHighlights(),
+                    ],
+                    const SizedBox(height: 32),
+                    _buildSearchBar(),
+                    const SizedBox(height: 32),
+                    _buildSectionHeader(
+                      _searchController.text.isEmpty
+                          ? 'Popular Destinations in India'
+                          : 'Search Results',
+                      onSeeAll: () {},
+                    ),
+                    const SizedBox(height: 20),
+                    _buildDestinationsGrid(screenWidth),
+                    const SizedBox(height: 40),
+                    _buildSectionHeader('Your Recent Trips', onSeeAll: () {}),
+                    const SizedBox(height: 20),
+                    _buildTripsGrid(screenWidth),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- Navigation Widgets ---
+
+  Widget _buildBottomNavBar() {
+    return BottomNavigationBar(
+      currentIndex: _selectedIndex > 4
+          ? 4
+          : _selectedIndex, // Cap it for mobile safety
+      onTap: (index) => setState(() => _selectedIndex = index),
+      type: BottomNavigationBarType.fixed,
+      selectedItemColor: darkPurple,
+      unselectedItemColor: Colors.grey.shade500,
+      showUnselectedLabels: true,
+      selectedFontSize: 12,
+      unselectedFontSize: 12,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.explore_rounded),
+          label: 'Explore',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.luggage_rounded),
+          label: 'Community',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.bookmark_rounded),
+          label: 'Saved',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.settings_rounded),
+          label: 'Settings',
+        ),
+      ],
     );
   }
 
@@ -314,6 +348,8 @@ class _MainPageState extends State<MainPage> {
       ),
     );
   }
+
+  // --- Header Elements ---
 
   Widget _buildTopBar(bool isWideScreen) {
     return Container(
@@ -435,8 +471,11 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  // --- Feature Blocks ---
+
   Widget _buildBannerSection() {
     return Container(
+      // Make it slightly shorter on mobile to save real estate
       height: 250,
       width: double.infinity,
       decoration: BoxDecoration(
@@ -518,275 +557,6 @@ class _MainPageState extends State<MainPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: _searchController,
-        decoration: InputDecoration(
-          hintText: 'Search destinations, cities, experiences...',
-          hintStyle: TextStyle(color: Colors.grey.shade500),
-          prefixIcon: Icon(Icons.search, color: primaryPurple),
-          suffixIcon: Container(
-            margin: const EdgeInsets.all(8),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: lightPurple,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.tune, color: darkPurple, size: 20),
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide.none,
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 18,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, {VoidCallback? onSeeAll}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: darkPurple,
-          ),
-        ),
-        TextButton.icon(
-          onPressed: onSeeAll,
-          icon: const Icon(Icons.arrow_forward, color: primaryPurple, size: 18),
-          label: const Text(
-            'See All',
-            style: TextStyle(color: primaryPurple, fontWeight: FontWeight.w600),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDestinationsGrid(bool isWideScreen) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isWideScreen ? 4 : 2,
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 20,
-        childAspectRatio: isWideScreen ? 0.85 : 0.8,
-      ),
-      itemCount: _filteredDestinations.length,
-      itemBuilder: (context, index) {
-        final dest = _filteredDestinations[index];
-        return _buildDestinationCard(
-          dest['name']!,
-          dest['city']!,
-          dest['state']!,
-          dest['rating']!,
-          dest['cover']!,
-        );
-      },
-    );
-  }
-
-  Widget _buildDestinationCard(
-    String name,
-    String city,
-    String state,
-    String rating,
-    String cover,
-  ) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DestinationDetailScreen(
-              name: name,
-              city: city,
-              state: state,
-              rating: rating,
-              coverImage: cover,
-            ),
-          ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 3,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [lightPurple, accentPurple.withOpacity(0.3)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    Center(child: Image.network(cover, fit: BoxFit.cover)),
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 14,
-                              color: Colors.amber,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              rating,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: darkPurple,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.favorite_border_rounded,
-                          size: 18,
-                          color: primaryPurple,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: Colors.black87,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              size: 14,
-                              color: Colors.grey.shade500,
-                            ),
-                            const SizedBox(width: 2),
-                            Expanded(
-                              child: Text(
-                                '$city, $state',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: lightPurple,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 16,
-                            color: darkPurple,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -902,7 +672,311 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Widget _buildTripsGrid(bool isWideScreen) {
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search destinations, cities, experiences...',
+          hintStyle: TextStyle(color: Colors.grey.shade500),
+          prefixIcon: Icon(Icons.search, color: primaryPurple),
+          suffixIcon: Container(
+            margin: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: lightPurple,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.tune, color: darkPurple, size: 20),
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 18,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, {VoidCallback? onSeeAll}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: darkPurple,
+          ),
+        ),
+        TextButton.icon(
+          onPressed: onSeeAll,
+          icon: const Icon(Icons.arrow_forward, color: primaryPurple, size: 18),
+          label: const Text(
+            'See All',
+            style: TextStyle(color: primaryPurple, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- Dynamic Grids ---
+
+  int _getCrossAxisCount(double width) {
+    if (width > 1200) return 4;
+    if (width > 900) return 3;
+    if (width > 600) return 2;
+    return 1; // Phone sizes get 1 column for better readability
+  }
+
+  double _getDestinationsAspectRatio(double width) {
+    if (width > 1200) return 0.85;
+    if (width > 900) return 0.8;
+    if (width > 600) return 0.75;
+    return 1.4; // Wide rectangular look for single column mobile
+  }
+
+  double _getTripsAspectRatio(double width) {
+    if (width > 1200) return 1.0;
+    if (width > 900) return 0.95;
+    if (width > 600) return 0.9;
+    return 1.5; // Wide rectangular look for single column mobile
+  }
+
+  Widget _buildDestinationsGrid(double screenWidth) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: _getCrossAxisCount(screenWidth),
+        crossAxisSpacing: 20,
+        mainAxisSpacing: 20,
+        childAspectRatio: _getDestinationsAspectRatio(screenWidth),
+      ),
+      itemCount: _filteredDestinations.length,
+      itemBuilder: (context, index) {
+        final dest = _filteredDestinations[index];
+        return _buildDestinationCard(
+          dest['name']!,
+          dest['city']!,
+          dest['state']!,
+          dest['rating']!,
+          dest['cover']!,
+        );
+      },
+    );
+  }
+
+  Widget _buildDestinationCard(
+    String name,
+    String city,
+    String state,
+    String rating,
+    String cover,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DestinationDetailScreen(
+              name: name,
+              city: city,
+              state: state,
+              rating: rating,
+              coverImage: cover,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [lightPurple, accentPurple.withOpacity(0.3)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
+                        child: Image.network(
+                          cover,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              size: 14,
+                              color: Colors.amber,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              rating,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: darkPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.favorite_border_rounded,
+                          size: 18,
+                          color: primaryPurple,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                            const SizedBox(width: 2),
+                            Expanded(
+                              child: Text(
+                                '$city, $state',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: lightPurple,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 16,
+                            color: darkPurple,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTripsGrid(double screenWidth) {
     final trips = [
       {
         'name': 'Rajasthan Heritage Tour',
@@ -950,10 +1024,10 @@ class _MainPageState extends State<MainPage> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isWideScreen ? 4 : 2,
+        crossAxisCount: _getCrossAxisCount(screenWidth),
         crossAxisSpacing: 20,
         mainAxisSpacing: 20,
-        childAspectRatio: isWideScreen ? 1.0 : 0.9,
+        childAspectRatio: _getTripsAspectRatio(screenWidth),
       ),
       itemCount: trips.length,
       itemBuilder: (context, index) {
@@ -975,6 +1049,7 @@ class _MainPageState extends State<MainPage> {
   }
 
   void _navigateToItinerary(Map<String, dynamic> trip) {
+    // Keeping your custom trip navigation functionality
     final tripDetails = TripDetails(
       tripName: trip['name']!,
       place: trip['place']!,
@@ -992,49 +1067,16 @@ class _MainPageState extends State<MainPage> {
             Activity(
               name: 'Morning Temple Visit',
               description:
-                  'Visit the ancient temple and participate in morning prayers. Experience the spiritual ambiance and architectural beauty.',
+                  'Visit the ancient temple and participate in morning prayers...',
               expense: 500,
               time: '8:00 AM',
             ),
             Activity(
               name: 'City Tour',
               description:
-                  'Explore major landmarks including historical monuments, local markets, and cultural centers with a guided tour.',
+                  'Explore major landmarks including historical monuments...',
               expense: 1200,
               time: '11:00 AM',
-            ),
-            Activity(
-              name: 'Local Market Shopping',
-              description:
-                  'Browse through traditional handicrafts, textiles, and souvenirs at the bustling local bazaar.',
-              expense: 2000,
-              time: '4:00 PM',
-            ),
-          ],
-        ),
-        DayItinerary(
-          dayNumber: 2,
-          activities: [
-            Activity(
-              name: 'Fort Exploration',
-              description:
-                  'Discover the magnificent fort with its impressive architecture, royal chambers, and panoramic city views.',
-              expense: 800,
-              time: '9:00 AM',
-            ),
-            Activity(
-              name: 'Traditional Lunch',
-              description:
-                  'Enjoy authentic local cuisine at a heritage restaurant featuring regional specialties and traditional recipes.',
-              expense: 600,
-              time: '1:00 PM',
-            ),
-            Activity(
-              name: 'Evening Cultural Show',
-              description:
-                  'Watch a mesmerizing performance of traditional dance and music showcasing the region\'s rich cultural heritage.',
-              expense: 1500,
-              time: '7:00 PM',
             ),
           ],
         ),
@@ -1166,7 +1208,11 @@ class _MainPageState extends State<MainPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.people, size: 12, color: primaryPurple),
+                          const Icon(
+                            Icons.people,
+                            size: 12,
+                            color: primaryPurple,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '$members',

@@ -96,35 +96,54 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth > 900;
+    final isMobile = screenWidth <= 600;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F3F7),
       body: Column(
         children: [
-          _buildCompactHeader(),
+          _buildCompactHeader(isMobile),
           Expanded(
             child: isWideScreen
                 ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(flex: 5, child: _buildCalendarSection()),
-                      Expanded(flex: 3, child: _buildSidePanel()),
+                      Expanded(flex: 3, child: _buildSidePanel(isWideScreen)),
                     ],
                   )
-                : _buildCalendarSection(),
+                : SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        // On mobile, the calendar needs a constrained height so its
+                        // internal flex/expanded layout doesn't error out.
+                        SizedBox(height: 480, child: _buildCalendarSection()),
+                        // Side panel will stack below the calendar naturally
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: _buildSidePanel(isWideScreen),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCompactHeader() {
+  Widget _buildCompactHeader(bool isMobile) {
     final upcomingCount = _trips
         .where((t) => t.startDate.isAfter(DateTime.now()))
         .length;
     final totalBudget = _trips.fold<double>(0, (sum, t) => sum + t.budget);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: 12,
+      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [darkPurple, primaryPurple, accentPurple.withOpacity(0.8)],
@@ -139,68 +158,144 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          // Logo & Title
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.calendar_month_rounded,
-              color: Colors.white,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Trip Calendar',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+      child: isMobile
+          ? _buildMobileHeaderLayout(upcomingCount, totalBudget)
+          : _buildDesktopHeaderLayout(upcomingCount, totalBudget),
+    );
+  }
+
+  Widget _buildMobileHeaderLayout(int upcomingCount, double totalBudget) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
               ),
-              Text(
-                'Plan and organize your adventures',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.white.withOpacity(0.8),
-                ),
+              child: const Icon(
+                Icons.calendar_month_rounded,
+                color: Colors.white,
+                size: 22,
               ),
-            ],
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Trip Calendar',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    'Plan and organize your adventures',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            _buildCompactTodayButton(),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildCompactStatCard(
+                Icons.flight_takeoff_rounded,
+                '$upcomingCount',
+                'Upcoming',
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildCompactStatCard(
+                Icons.account_balance_wallet_rounded,
+                '₹${(totalBudget / 1000).toStringAsFixed(0)}K',
+                'Budget',
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopHeaderLayout(int upcomingCount, double totalBudget) {
+    return Row(
+      children: [
+        // Logo & Title
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(10),
           ),
-          const SizedBox(width: 24),
-          // View Toggle
-          // Stats
-          _buildCompactStatCard(
-            Icons.flight_takeoff_rounded,
-            '$upcomingCount',
-            'Upcoming',
+          child: const Icon(
+            Icons.calendar_month_rounded,
+            color: Colors.white,
+            size: 22,
           ),
-          const SizedBox(width: 10),
-          _buildCompactStatCard(
-            Icons.account_balance_wallet_rounded,
-            '₹${(totalBudget / 1000).toStringAsFixed(0)}K',
-            'Budget',
-          ),
-          const SizedBox(width: 16),
-          // Today Button
-          _buildCompactTodayButton(),
-        ],
-      ),
+        ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Trip Calendar',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            Text(
+              'Plan and organize your adventures',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.white.withOpacity(0.8),
+              ),
+            ),
+          ],
+        ),
+        const Spacer(),
+        // Stats
+        _buildCompactStatCard(
+          Icons.flight_takeoff_rounded,
+          '$upcomingCount',
+          'Upcoming',
+        ),
+        const SizedBox(width: 10),
+        _buildCompactStatCard(
+          Icons.account_balance_wallet_rounded,
+          '₹${(totalBudget / 1000).toStringAsFixed(0)}K',
+          'Budget',
+        ),
+        const SizedBox(width: 16),
+        // Today Button
+        _buildCompactTodayButton(),
+      ],
     );
   }
 
   Widget _buildCompactStatCard(IconData icon, String value, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(8),
@@ -208,6 +303,7 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: Colors.white, size: 16),
           const SizedBox(width: 8),
@@ -250,7 +346,7 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
         },
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -574,7 +670,7 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
                             );
                           }).toList(),
                         ),
-                      // Show continuation bar for ongoing trips (no icon, just bar)
+                      // Show continuation bar for ongoing trips
                       if (tripsContinuing.isNotEmpty &&
                           tripsStartingToday.isEmpty)
                         Container(
@@ -614,6 +710,7 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
 
   Widget _buildCalendarFooter() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: lightPurple.withOpacity(0.3),
@@ -622,15 +719,14 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
           bottomRight: Radius.circular(20),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 12,
+        runSpacing: 8,
         children: [
           _buildLegendChip(const Color(0xFF10B981), 'Leisure'),
-          const SizedBox(width: 12),
           _buildLegendChip(const Color(0xFF6366F1), 'Adventure'),
-          const SizedBox(width: 12),
           _buildLegendChip(const Color(0xFFF59E0B), 'Beach'),
-          const SizedBox(width: 12),
           _buildLegendChip(const Color(0xFF8B5CF6), 'Spiritual'),
         ],
       ),
@@ -659,7 +755,7 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
     );
   }
 
-  Widget _buildSidePanel() {
+  Widget _buildSidePanel(bool isWideScreen) {
     final selectedTrips = _selectedDate != null
         ? _getTripsForDate(_selectedDate!)
         : [];
@@ -667,8 +763,24 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
         _trips.where((t) => t.startDate.isAfter(DateTime.now())).toList()
           ..sort((a, b) => a.startDate.compareTo(b.startDate));
 
+    // The list needs to adapt depending on layout
+    Widget tripsList = ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      // Shrinkwrap is vital on mobile because the list is inside a ScrollView
+      shrinkWrap: !isWideScreen,
+      physics: isWideScreen
+          ? const AlwaysScrollableScrollPhysics()
+          : const NeverScrollableScrollPhysics(),
+      itemCount: upcomingTrips.length,
+      itemBuilder: (context, index) => _buildTripCard(upcomingTrips[index]),
+    );
+
     return Container(
-      margin: const EdgeInsets.only(top: 12, right: 12, bottom: 12),
+      margin: EdgeInsets.only(
+        top: isWideScreen ? 12 : 0,
+        right: isWideScreen ? 12 : 0,
+        bottom: 12,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -681,6 +793,7 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min, // Vital for stacking on mobile
         children: [
           Container(
             padding: const EdgeInsets.all(16),
@@ -755,14 +868,8 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
               ],
             ),
           ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              itemCount: upcomingTrips.length,
-              itemBuilder: (context, index) =>
-                  _buildTripCard(upcomingTrips[index]),
-            ),
-          ),
+          // Fill space dynamically based on context
+          isWideScreen ? Expanded(child: tripsList) : tripsList,
         ],
       ),
     );
@@ -813,6 +920,8 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Row(
                       children: [
@@ -822,11 +931,15 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
                           color: Colors.grey.shade500,
                         ),
                         const SizedBox(width: 2),
-                        Text(
-                          trip.destination,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey.shade600,
+                        Expanded(
+                          child: Text(
+                            trip.destination,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey.shade600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -886,12 +999,17 @@ class _CalendarViewScreenState extends State<CalendarViewScreen> {
         children: [
           Icon(icon, size: 10, color: Colors.grey.shade500),
           const SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 9,
-              color: Colors.grey.shade700,
-              fontWeight: FontWeight.w500,
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 9,
+                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
             ),
           ),
         ],
