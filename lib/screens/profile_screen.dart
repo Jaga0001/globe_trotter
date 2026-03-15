@@ -78,8 +78,6 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
   bool _isTablet(BuildContext context) =>
       MediaQuery.of(context).size.width >= _mobileBreakpoint &&
       MediaQuery.of(context).size.width < _tabletBreakpoint;
-  bool _isDesktop(BuildContext context) =>
-      MediaQuery.of(context).size.width >= _tabletBreakpoint;
 
   @override
   void initState() {
@@ -1060,7 +1058,7 @@ class _ProfileSettingsPageWebState extends State<ProfileSettingsPageWeb>
 
   Widget _buildStatisticsSection(BuildContext context) {
     final isMobile = _isMobile(context);
-    final isTablet = _isTablet(context);
+    _isTablet(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
